@@ -1,7 +1,5 @@
 <?php
 /*
- * This file is part of the opcart software.
- *
  * (c) 2018, OpticsPlanet, Inc.
  *
  * For the full copyright and license information, please view the LICENSE
@@ -16,7 +14,6 @@ use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
  * DateHandler handler to add the same handlers for dates in json:api format as for json format
  *
  * @copyright 2018 OpticsPlanet, Inc
- * @package   SabioApp
  * @author    Vlad Yarus <vladislav.yarus@intexsys.lv>
  */
 class DateHandler extends BaseDateHandler
