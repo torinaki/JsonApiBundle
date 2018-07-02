@@ -1,6 +1,6 @@
 <?php
 /*
- * (c) Steffen Brem <steffenbrem@gmail.com>
+ * (c) 2018, OpticsPlanet, Inc.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -9,9 +9,6 @@
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 
 use JMS\Serializer\Handler\ArrayCollectionHandler as BaseArrayCollectionHandler;
-use JMS\Serializer\VisitorInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use JMS\Serializer\Context;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 
 /**
@@ -36,15 +33,4 @@ class ArrayCollectionHandler extends BaseArrayCollectionHandler
         }
         return array_merge($methods, $additionalMethods);
     }
-
-//    /**
-//     * {@inheritdoc}
-//     */
-//    public function deserializeCollection(VisitorInterface $visitor, $data, array $type, Context $context)
-//    {
-//        // See above.
-//        $type['name'] = 'array';
-//
-//        return $visitor->visitArray($data, $type, $context);
-//    }
 }
