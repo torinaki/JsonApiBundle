@@ -7,6 +7,7 @@
  */
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 
+use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\DateHandler as BaseDateHandler;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 
@@ -28,6 +29,9 @@ class DateHandler extends BaseDateHandler
         foreach ($methods as $method) {
             if ($method['format'] === 'json') {
                 $method['format'] = MangoJsonApiBundle::FORMAT;
+                if (!isset($method['method']) && $method['direction'] === GraphNavigator::DIRECTION_DESERIALIZATION) {
+                    $method['method'] = 'deserialize' . $method['type'] . 'FromJson';
+                }
                 $additionalMethods[] = $method;
             }
         }
