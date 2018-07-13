@@ -107,7 +107,7 @@ class DeserializationTest extends TestCase
      *
      * @return void
      */
-    public function testDeserializeAttributesWithSerializedNameOveride()
+    public function testDeserializeAttributesWithSerializedNameOverride()
     {
         $id = 'ORDER-1';
         $orderDate = '2018-01-01T00:00:00+0300';
