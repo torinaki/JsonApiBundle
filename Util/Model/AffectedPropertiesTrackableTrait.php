@@ -29,7 +29,9 @@ trait AffectedPropertiesTrackableTrait
      */
     public function addAffectedProperty(string $propertyName)
     {
-        $this->affectedProperties[] = $propertyName;
+        if (!in_array($propertyName, $this->affectedProperties, true)) {
+            $this->affectedProperties[] = $propertyName;
+        }
     }
 
     /**
