@@ -43,4 +43,15 @@ trait AffectedPropertiesTrackableTrait
     {
         return $this->affectedProperties;
     }
+
+    /**
+     * Whether the property was affected
+     *
+     * @param string $propertyName property name
+     * @return bool
+     */
+    public function isPropertyAffected(string $propertyName): bool
+    {
+        return in_array($propertyName, $this->getAffectedProperties(), true);
+    }
 }
