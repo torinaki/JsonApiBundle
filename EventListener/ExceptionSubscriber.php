@@ -73,7 +73,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            KernelEvents::EXCEPTION => array('onKernelException', -128),
+            KernelEvents::EXCEPTION => array('onKernelException', 10),
         ];
     }
 
