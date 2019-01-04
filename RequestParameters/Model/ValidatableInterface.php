@@ -15,7 +15,9 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 /**
  * Validatable interface
  *
- * @author Sergey Chernecov <sergey.chernecov@intexsys.lv>
+ * @author Sergey Chernecov <sergey.chernecov@ecentria.com>
+ *
+ * @todo: this is copy of class from ecentria/converters-library and should be removed after library is available on github
  */
 interface ValidatableInterface
 {
