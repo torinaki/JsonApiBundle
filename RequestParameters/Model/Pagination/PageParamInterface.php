@@ -16,7 +16,7 @@ namespace Mango\Bundle\JsonApiBundle\RequestParameters\Model\Pagination;
 interface PageParamInterface
 {
     const DEFAULT_NUMBER = 1;
-    const DEFAULT_SIZE   = 40;
+    const DEFAULT_SIZE   = 20;
 
     /**
      * Returns current page number
