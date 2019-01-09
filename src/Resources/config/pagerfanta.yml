@@ -1,0 +1,7 @@
+services:
+  json_api.serializer.handler.pagerfanta:
+    class: 'Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler'
+    arguments:
+      - '@request_stack'
+    tags:
+      - { name: 'jms_serializer.subscribing_handler' }
