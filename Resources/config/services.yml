@@ -86,3 +86,24 @@ services:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\Handler\LazyRegexHandlerRegistry'
         arguments:
             - '@service_container'
+
+    json_api.request_params.parser.filter_param:
+        class: 'Mango\Bundle\JsonApiBundle\RequestParameters\Parser\FilterParamParser'
+
+    json_api.request_params.parser.sort_param:
+        class: 'Mango\Bundle\JsonApiBundle\RequestParameters\Parser\SortParamParser'
+
+    json_api.request_params.parser.page_param:
+        class: 'Mango\Bundle\JsonApiBundle\RequestParameters\Parser\PageParamParser'
+
+    json_api.request_params.converter.http_request_converter:
+        class: 'Mango\Bundle\JsonApiBundle\RequestParameters\Converter\HttpRequestToParametersConverter'
+        arguments:
+            - '@jms_serializer'
+            - '@validator'
+            - filter: '@json_api.request_params.parser.filter_param'
+              sort: '@json_api.request_params.parser.sort_param'
+              page: '@json_api.request_params.parser.page_param'
+
+        tags:
+            - {name: 'request.param_converter', converter: 'json_api.request_params.converter.http_request_converter'}
