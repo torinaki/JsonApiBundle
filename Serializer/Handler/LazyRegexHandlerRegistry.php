@@ -59,7 +59,7 @@ class LazyRegexHandlerRegistry extends HandlerRegistry
      *
      * @return array|null
      */
-    public function getHandler($direction, $typeName, $format)
+    public function getHandler(int $direction, string $typeName, string $format)
     {
         if (isset($this->initializedHandlers[$direction][$typeName][$format])) {
             return $this->initializedHandlers[$direction][$typeName][$format];

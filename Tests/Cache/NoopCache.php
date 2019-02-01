@@ -30,4 +30,26 @@ class NoopCache implements CacheInterface
     {
         return null;
     }
+
+    /**
+     * Loads a class metadata instance from the cache
+     */
+    public function load(string $class): ?ClassMetadata
+    {
+        return null;
+    }
+
+    /**
+     * Puts a class metadata instance into the cache
+     */
+    public function put(ClassMetadata $metadata): void
+    {
+    }
+
+    /**
+     * Evicts the class metadata for the given class from the cache.
+     */
+    public function evict(string $class): void
+    {
+    }
 }

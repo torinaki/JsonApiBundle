@@ -8,7 +8,8 @@
 
 namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver;
 
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
+use Metadata\ClassMetadata;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
 use Mango\Bundle\JsonApiBundle\Util\StringUtil;
@@ -23,7 +24,7 @@ class YamlDriver extends AbstractFileDriver
     /**
      * {@inheritdoc}
      */
-    protected function loadMetadataFromFile(\ReflectionClass $class, $file)
+    protected function loadMetadataFromFile(\ReflectionClass $class, string $file): ?ClassMetadata
     {
         $config = Yaml::parse(file_get_contents($file));
 
@@ -34,7 +35,7 @@ class YamlDriver extends AbstractFileDriver
         $config = $config[$name];
 
         if (isset($config['resource'])) {
-            $classMetadata = new ClassMetadata($name);
+            $classMetadata = new JsonApiClassMetadata($name);
             $classMetadata->fileResources[] = $file;
             $classMetadata->fileResources[] = $class->getFileName();
 
@@ -65,7 +66,7 @@ class YamlDriver extends AbstractFileDriver
     /**
      * {@inheritdoc}
      */
-    protected function getExtension()
+    protected function getExtension(): string
     {
         return 'yml';
     }

@@ -32,7 +32,7 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
         return $data;
     }
 
-    public function visitProperty(PropertyMetadata $metadata, $data, Context $context)
+    public function visitProperty(PropertyMetadata $metadata, $data, Context $context = null)
     {
         if ($this->namingStrategy instanceof AdvancedNamingStrategyInterface) {
             $propertyName = $this->namingStrategy->getPropertyName($metadata, $context);

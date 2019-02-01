@@ -38,7 +38,7 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function shouldSkipClass(ClassMetadata $metadata, Context $context)
+    public function shouldSkipClass(ClassMetadata $metadata, Context $context): bool
     {
         //$jsonApiMetadata = $this->metadataFactory->getMetadataForClass($metadata->name);
 
@@ -55,7 +55,7 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function shouldSkipProperty(PropertyMetadata $property, Context $context)
+    public function shouldSkipProperty(PropertyMetadata $property, Context $context): bool
     {
         if (!$context instanceof SerializationContext) {
             return false;

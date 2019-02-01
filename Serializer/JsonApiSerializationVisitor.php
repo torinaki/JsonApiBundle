@@ -171,7 +171,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     /**
      * {@inheritdoc}
      */
-    public function getResult()
+    public function getResult($data)
     {
         if (false === $this->isJsonApiDocument) {
             return parent::getResult();
@@ -255,7 +255,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     /**
      * {@inheritdoc}
      */
-    public function endVisitingObject(ClassMetadata $metadata, $data, array $type, Context $context)
+    public function endVisitingObject(ClassMetadata $metadata, object $data, array $type, Context $context = null)
     {
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 

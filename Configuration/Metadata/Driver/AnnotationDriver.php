@@ -45,11 +45,12 @@ use JMS\Serializer\Metadata\ExpressionPropertyMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Metadata\VirtualPropertyMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
 use Metadata\Driver\DriverInterface;
 use Metadata\MethodMetadata;
+use Metadata\ClassMetadata;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -69,9 +70,9 @@ class AnnotationDriver implements DriverInterface
       $this->reader = $reader;
   }
 
-    public function loadMetadataForClass(\ReflectionClass $class)
+    public function loadMetadataForClass(\ReflectionClass $class): ?ClassMetadata
     {
-        $classMetadata = new ClassMetadata($name = $class->name);
+        $classMetadata = new JsonApiClassMetadata($name = $class->name);
         $classMetadata->fileResources[] = $class->getFilename();
 
         $propertiesMetadata = array();

@@ -42,7 +42,7 @@ final class Serializer implements SerializerInterface
     /**
      * {@inheritdoc}
      */
-    public function serialize($data, $format, SerializationContext $context = null)
+    public function serialize($data, string $format, ?SerializationContext $context = null, ?string $type = null): string
     {
         if (null === $context) {
             $context = new SerializationContext();
@@ -59,7 +59,7 @@ final class Serializer implements SerializerInterface
     /**
      * {@inheritdoc}
      */
-    public function deserialize($data, $type, $format, DeserializationContext $context = null)
+    public function deserialize(string $data, string $type, string $format, ?DeserializationContext $context = null)
     {
         if (null === $context) {
             $context = new DeserializationContext();
