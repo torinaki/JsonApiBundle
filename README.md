@@ -1,24 +1,123 @@
 # JsonApiBundle
 
-[![Join the chat at https://gitter.im/steffenbrem/JsonApiBundle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/steffenbrem/JsonApiBundle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 support coming soon)
 
-Integration of JSON API with Symfony 2 (FOSRestBundle)
+## Get Started
+### Installation
 
-> Note that this is stil a WIP and should not be used for production!
-
-## Usage
-> Coming soon
-
-If you want to experiment with this implementation, you can just enable this bundle in your `AppKernel` and everything should work directly. Try to serialize some annotated php classes and check it out!
-
-### Configuration reference
-```yml
-mango_json_api:
-    show_version_info: true # default
-    base_uri: /api # default
+1. Declare following repository in your `composer.json`:
+```json
+{
+  "repositories": [
+    { "type": "vcs", "url": "https://github.com/ecentria/JsonApiBundle.git" }
+  ]
+}
+```
+Install required package:
+```bash
+composer require steffenbrem/json-api-bundle:dev-production
 ```
 
-## Annotations
+Register bundles in your `AppKernel`:
+```php
+    public function registerBundles()
+    {
+        $bundles = [
+            new JMS\SerializerBundle\JMSSerializerBundle(),
+            new Mango\Bundle\JsonApiBundle\MangoJsonApiBundle(),
+        ];
+
+        return $bundles;
+    }
+```
+
+### Configuration
+
+Configure JMS serializer:
+```yaml
+jms_serializer:
+    property_naming:
+        separator: '_'
+    metadata:
+        auto_detection: true
+        directories:
+            sabio-entity:
+                namespace_prefix: "Your\\Entity"                     # <------ Replace with yours entities namespace
+                path: "@YourAppBundle/Resources/config/serializer/entity"   # <------ Replace with path where you will put serialization configs
+```
+
+Configure JsonApiBundle:
+```yaml
+mango_json_api:
+    base_uri: ~
+    catch_exceptions: true
+```
+
+## Usage
+We assume that you are already familiar with JMS serializer.
+If not please following original JMS serialization V1 documentation: [https://jmsyst.com/libs/serializer/1.x](https://jmsyst.com/libs/serializer/1.x)
+
+### YAML
+It is preferable to use YAML, but you can use annotations as well. The only difference that you should specify type and idField as following:
+YAML example:
+```yaml
+Your\Entity\User:
+    resource:
+        type: users
+        idField: id
+```
+
+### Annotations
+Annotation example:
+```php
+<?php
+/**
+ * User model
+ *
+ * @JsonApi\Resource(
+ *     type="users",
+ *     showLinkSelf=true,
+ *     absolute=true
+ * )
+ */
+class User
+{
+    /**
+     * Brand ID
+     *
+     * @var integer
+     * @JsonApi\Id()
+     * @Jms\Type("integer")
+     */
+    private $id;
+}
+```
+
+### Serialization and API response
+```php
+<?php
+use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResponse;
+
+class UserController extends Controller
+{
+    public function getUsersAction()
+    {
+        $serializer = $this->get('jms_serializer');
+        return new JsonApiResponse($serializer->serialize($users));
+    }
+}
+```
+
+## Request parameters validation and converting
+TBD
+
+## Routing
+Not yet implemented. Coming soon
+
+
+## [DEPRECATED] documentation
+...but still might useful in some cases
+
 ### @Resource
 This will define your class as a JSON-API resource, and you can optionally set it's type name.
 > This annotation can be defined on a class.
