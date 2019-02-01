@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.2",
         "ext-json": "*",
         "symfony/yaml": "^2.3|^3.4",
         "symfony/property-access": "^2.3|^3.4",
