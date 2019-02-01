@@ -8,6 +8,7 @@
 namespace Mango\Bundle\JsonApiBundle\Serializer\Accessor;
 
 use JMS\Serializer\Accessor\DefaultAccessorStrategy as BaseAccessor;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use Mango\Bundle\JsonApiBundle\Util\Model\AffectedPropertiesAwareInterface;
 
@@ -22,9 +23,9 @@ class DefaultAccessorStrategy extends BaseAccessor
     /**
      * {@inheritdoc}
      */
-    public function setValue($object, $value, PropertyMetadata $metadata)
+    public function setValue(object $object, $value, PropertyMetadata $metadata, DeserializationContext $context): void
     {
-        parent::setValue($object, $value, $metadata);
+        parent::setValue($object, $value, $metadata, $context);
 
         if ($object instanceof AffectedPropertiesAwareInterface) {
             $object->addAffectedProperty($metadata->name);
