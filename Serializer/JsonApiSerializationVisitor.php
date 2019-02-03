@@ -8,13 +8,13 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
-use JMS\Serializer\Accessor\AccessorStrategyInterface;
-use JMS\Serializer\Context;
+use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\JsonSerializationVisitor;
 use Doctrine\Common\Persistence\Proxy;
 use Doctrine\Common\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Metadata\ClassMetadata;
-use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use JMS\Serializer\Metadata\PropertyMetadata;
+use JMS\Serializer\Visitor\SerializationVisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
@@ -25,7 +25,7 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-class JsonApiSerializationVisitor extends JsonSerializationVisitor
+class JsonApiSerializationVisitor implements SerializationVisitorInterface
 {
     /**
      * @var MetadataFactoryInterface
@@ -42,25 +42,24 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $isJsonApiDocument = false;
 
-    /**
-     * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param AccessorStrategyInterface|null  $accessorStrategy
-     * @param MetadataFactoryInterface|null   $metadataFactory
-     * @param bool                            $showVersionInfo
-     */
-    public function __construct(
-        PropertyNamingStrategyInterface $propertyNamingStrategy,
-        AccessorStrategyInterface $accessorStrategy = null,
-        MetadataFactoryInterface $metadataFactory = null,
-        $showVersionInfo = false
-    ) {
-        parent::__construct(
-            $propertyNamingStrategy,
-            $accessorStrategy
-        );
+    /** @var JsonSerializationVisitor */
+    private $jsonSerializationVisitor;
 
+    /** @var array */
+    private $included;
+
+    /** @var \SplStack */
+    private $documentMetadataStack;
+
+    public function __construct(
+        MetadataFactoryInterface $metadataFactory,
+        $showVersionInfo = false,
+        int $options = JSON_PRESERVE_ZERO_FRACTION
+    ) {
+        $this->jsonSerializationVisitor = new JsonSerializationVisitor($options);
         $this->metadataFactory = $metadataFactory;
         $this->showVersionInfo = $showVersionInfo;
+        $this->documentMetadataStack = new \SplStack();
     }
 
     /**
@@ -174,12 +173,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     public function getResult($data)
     {
         if (false === $this->isJsonApiDocument) {
-            return parent::getResult();
+            return $this->jsonSerializationVisitor->getResult($data);
         }
 
-        $root = $this->getRoot();
+        $root = $data;
 
         if ($root) {
+
             $data = array();
             $meta = array();
             $included = array();
@@ -190,8 +190,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $data = $root['data'];
             }
 
-            if (isset($root['included'])) {
-                $included = $root['included'];
+            if (isset($this->included)) {
+                $included = $this->included;
             }
 
             if (isset($root['meta'])) {
@@ -206,7 +206,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $errors = $root['errors'];
             }
 
-            if (!is_null($data)) {
+            if (null !== $data) {
                 // filter out duplicate primary resource objects that are in `included`
                 $included = array_udiff(
                     (array) $included,
@@ -246,26 +246,24 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 }
             }
 
-            $this->setRoot($root);
         }
 
-        return parent::getResult();
+        return $this->jsonSerializationVisitor->getResult($root);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function endVisitingObject(ClassMetadata $metadata, object $data, array $type, Context $context = null)
+    public function endVisitingObject(ClassMetadata $metadata, object $data, array $type)
     {
-        $rs = parent::endVisitingObject($metadata, $data, $type, $context);
+        $rs = $this->jsonSerializationVisitor->endVisitingObject($metadata, $data, $type);
 
+        [$id, $type, $relationships, $links] = $this->documentMetadataStack->pop();
         if ($rs instanceof \ArrayObject) {
-            $rs = array();
-            $this->setRoot($rs);
-
-            return $rs;
+            return [];
         }
 
+        // TODO: solve issue with undefined Proxy classes
         if ($data instanceof Proxy || $data instanceof ORMProxy) {
             $class = get_parent_class($data);
         } else {
@@ -281,22 +279,22 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $result = array();
 
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $language = new ExpressionLanguage\ExpressionLanguage();
-            $type =  $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+        if (isset($type)) {
 
-            $groups = $context->attributes->get('groups');
-            $groups = $groups instanceof None ? [] : $groups->get();
+            // TODO: implement expression language
+//            $language = new ExpressionLanguage\ExpressionLanguage();
+//            $groups = $context->hasAttribute('groups') ? $context->getAttribute('groups') : [];
+//            $groups = $groups instanceof None ? [] : $groups->get();
 
-            try {
-                $result['type'] = $language->evaluate($type, ['groups' => $groups]);
-            } catch (ExpressionLanguage\SyntaxError $e) {
+//            try {
+//                $result['type'] = $language->evaluate($type, ['groups' => $groups]);
+//            } catch (ExpressionLanguage\SyntaxError $e) {
                 $result['type'] = $type;
-            }
+//            }
         }
 
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
-            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
+        if (isset($id)) {
+            $result['id'] = $id;
         }
 
         $idField = $jsonApiMetadata->getIdField();
@@ -320,12 +318,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             ARRAY_FILTER_USE_KEY
         );
 
-        if (isset($rs['relationships'])) {
-            $result['relationships'] = $rs['relationships'];
+        if (!empty($relationships)) {
+            $result['relationships'] = $relationships;
         }
 
-        if (isset($rs['links'])) {
-            $result['links'] = $rs['links'];
+        if (isset($links)) {
+            $result['links'] = $links;
         }
 
         return $result;
@@ -370,5 +368,113 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         return false;
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $type
+     *
+     * @return mixed
+     */
+    public function visitNull($data, array $type)
+    {
+        return $this->jsonSerializationVisitor->visitNull($data, $type);
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $type
+     *
+     * @return mixed
+     */
+    public function visitString(string $data, array $type)
+    {
+        return $this->jsonSerializationVisitor->visitString($data, $type);
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $type
+     *
+     * @return mixed
+     */
+    public function visitBoolean(bool $data, array $type)
+    {
+        return $this->jsonSerializationVisitor->visitBoolean($data, $type);
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $type
+     *
+     * @return mixed
+     */
+    public function visitDouble(float $data, array $type)
+    {
+        return $this->jsonSerializationVisitor->visitDouble($data, $type);
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $type
+     *
+     * @return mixed
+     */
+    public function visitInteger(int $data, array $type)
+    {
+        return $this->jsonSerializationVisitor->visitInteger($data, $type);
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $type
+     *
+     * @return array|\ArrayObject
+     */
+    public function visitArray(array $data, array $type)
+    {
+        return $this->jsonSerializationVisitor->visitArray($data, $type);
+    }
+
+    /**
+     * Called before the properties of the object are being visited.
+     *
+     * @param mixed $data
+     * @param array $type
+     */
+    public function startVisitingObject(ClassMetadata $metadata, object $data, array $type): void
+    {
+        $this->jsonSerializationVisitor->startVisitingObject($metadata, $data, $type);
+    }
+
+    /**
+     * @param mixed $data
+     */
+    public function visitProperty(PropertyMetadata $metadata, $data): void
+    {
+        $this->jsonSerializationVisitor->visitProperty($metadata, $data);
+    }
+
+    /**
+     * Called before serialization/deserialization starts.
+     */
+    public function setNavigator(GraphNavigatorInterface $navigator): void
+    {
+        $this->jsonSerializationVisitor->setNavigator($navigator);
+    }
+
+    public function setIncluded(array $included)
+    {
+        $this->included = $included;
+    }
+
+    public function pushDocumentMetadata(string $id, string $type, ?array $relationships = null, ?array $links = null):void
+    {
+        $this->documentMetadataStack->push([$id, $type, $relationships, $links]);
+    }
+
+    public function popDocumentMetadata(): array
+    {
+        return $this->documentMetadataStack->pop();
     }
 }

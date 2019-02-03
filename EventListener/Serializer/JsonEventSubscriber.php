@@ -139,8 +139,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $groups = $context->attributes->get('groups');
-        $groups = $groups instanceof None ? [] : $groups->get();
+        $groups = $context->hasAttribute('groups') ? $context->getAttribute('groups') : [];
 
         $objectProps = $this->getObjectMainProps(
             $metadata,
@@ -148,14 +147,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             $groups
         );
 
-        $visitor->setData(
-            self::EXTRA_DATA_KEY,
-            [
-                'id' => $objectProps['id'],
-                'type' => $objectProps['type'],
-            ]
-        );
-
+        $documentLinks = null;
         $relationships = array();
 
         foreach ($metadata->getRelationships() as $relationship) {
@@ -214,30 +206,22 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
         }
 
-        if ($relationships) {
-            $visitor->setData('relationships', $relationships);
-        }
-
         //
         // TODO: Improve link handling
         /** @var Relationship $resource */
         $resource = $metadata->getResource();
         if ($resource && true === $resource->getShowLinkSelf()) {
             $uri = $this->baseUriResolver->getBaseUri($resource->isAbsolute());
-            $visitor->setData(
-                'links',
-                [
-                    'self' =>
-                        $uri . '/' .
-                        $objectProps['type'] . '/' .
-                        $objectProps['id'],
-                ]
-            );
+            $documentLinks = [
+                'self' =>
+                    $uri . '/' .
+                    $objectProps['type'] . '/' .
+                    $objectProps['id'],
+            ];
         }
 
-        $root = (array) $visitor->getRoot();
-        $root['included'] = array_values($this->includedRelationships);
-        $visitor->setRoot($root);
+        $visitor->pushDocumentMetadata($objectProps['id'], $objectProps['type'], $relationships, $documentLinks);
+        $visitor->setIncluded(array_values($this->includedRelationships));
     }
 
     /**
@@ -295,8 +279,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             ));
         }
 
-        $groups = $context->attributes->get('groups');
-        $groups = $groups instanceof None ? [] : $groups->get();
+        $groups = $context->hasAttribute('groups') ? $context->getAttribute('groups') : [];
 
         // contains the relations type and id
         $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $object, $groups);
@@ -318,7 +301,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             $hashKey = $this->getRelationshipHashKey($type, $objectId);
 
             $this->includedRelationships[$hashKey] = &$includedRelationship;
-            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
+            $includedRelationship = $context->getNavigator()->accept($object); // override previous reference with the serialized data
         }
 
         // the relationship data can only contain one reference to another resource

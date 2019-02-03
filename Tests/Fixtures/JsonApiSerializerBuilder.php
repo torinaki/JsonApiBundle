@@ -27,18 +27,22 @@ use Mango\Bundle\JsonApiBundle\Tests\Cache\NoopCache;
 use Metadata\Driver\DriverChain;
 use Metadata\Driver\FileLocator;
 use Metadata\MetadataFactory;
-use PhpCollection\Map;
+use Mango\Bundle\JsonApiBundle\Serializer\Visitor\Factory\JsonApiDeserializationVisitorFactory;
+use Mango\Bundle\JsonApiBundle\Serializer\Visitor\Factory\JsonApiSerializationVisitorFactory;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler;
 use JMS\Serializer\Handler\StdClassHandler;
-use JMS\Serializer\Handler\PhpCollectionHandler;
 use Mango\Bundle\JsonApiBundle\Serializer\Handler\ArrayCollectionHandler;
-use JMS\Serializer\Handler\PropelCollectionHandler;
+use JMS\Serializer\Handler\DateHandler as BaseDateHandler;
+use JMS\Serializer\Handler\ArrayCollectionHandler as BaseArrayCollectionHandler;
+use JMS\Serializer\Visitor\Factory\JsonSerializationVisitorFactory;
+use JMS\Serializer\Visitor\Factory\JsonDeserializationVisitorFactory;
 
 /**
  * Json api serializer builder
  *
  * @author Ruslan Zavacky <ruslan.zavacky@gmail.com>
+ * @todo this builder duplicates bundle's logic. Testing environment should be integrated with Symfony's KernelTestCase
  */
 class JsonApiSerializerBuilder
 {
@@ -49,13 +53,21 @@ class JsonApiSerializerBuilder
      */
     public static function build()
     {
+        $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
         $drivers = [
             new YamlDriver(new FileLocator(['Mango\Bundle\JsonApiBundle\Tests\Fixtures' => __DIR__ . '/yml'])),
-            new AnnotationDriver(new AnnotationReader())
+            new AnnotationDriver(
+                new AnnotationReader(),
+                $namingStrategy
+            )
         ];
 
-        $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
-        $jmsMetadataFactory = new MetadataFactory(new AnnotationDriver(new AnnotationReader()));
+        $jmsMetadataFactory = new MetadataFactory(
+            new AnnotationDriver(
+                new AnnotationReader(),
+                $namingStrategy
+            )
+        );
         $jsonApiChainDriver = new DriverChain($drivers);
 
         $jsonApiMetadataFactory = new MetadataFactory($jsonApiChainDriver);
@@ -78,24 +90,43 @@ class JsonApiSerializerBuilder
 
         $accessorStrategy = new Serializer\Accessor\DefaultAccessorStrategy();
 
-        $jsonApiSerializationVisitor = new JsonApiSerializationVisitor(
-            $namingStrategy,
-            $accessorStrategy,
-            $jmsMetadataFactory
-        );
-        $jsonApiDeserializationVisitor = new JsonApiDeserializationVisitor($namingStrategy);
+        $serializationVisitors = [
+            MangoJsonApiBundle::FORMAT => new JsonApiSerializationVisitorFactory(
+                $jsonApiMetadataFactory
+            ),
+            'json' => new JsonSerializationVisitorFactory(),
+        ];
+        $deserializationVisitors = [
+            MangoJsonApiBundle::FORMAT => new JsonApiDeserializationVisitorFactory(),
+            'json' => new JsonDeserializationVisitorFactory(),
+        ];
 
-        $serializationVisitors = new Map([MangoJsonApiBundle::FORMAT => $jsonApiSerializationVisitor]);
-        $deserializationVisitors = new Map([MangoJsonApiBundle::FORMAT => $jsonApiDeserializationVisitor]);
         $objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
+
+        // TODO: add ExpressionEvaluator
+        $serializationGraphNavigatorFactory = [
+            Serializer\GraphNavigatorInterface::DIRECTION_SERIALIZATION =>
+                new Serializer\GraphNavigator\Factory\SerializationGraphNavigatorFactory(
+                    $jsonApiMetadataFactory,
+                    $handlerRegistry,
+                    $accessorStrategy,
+                    $dispatcher
+                ),
+            Serializer\GraphNavigatorInterface::DIRECTION_DESERIALIZATION =>
+                new Serializer\GraphNavigator\Factory\DeserializationGraphNavigatorFactory(
+                    $jsonApiMetadataFactory,
+                    $handlerRegistry,
+                    $objectConstructor,
+                    $accessorStrategy,
+                    $dispatcher
+                ),
+        ];
 
         $jmsSerializer = new Serializer\Serializer(
             $jmsMetadataFactory,
-            $handlerRegistry,
-            $objectConstructor,
+            $serializationGraphNavigatorFactory,
             $serializationVisitors,
-            $deserializationVisitors,
-            $dispatcher
+            $deserializationVisitors
         );
 
         $exclusionStrategy = new RelationshipExclusionStrategy($jmsMetadataFactory);
@@ -111,11 +142,9 @@ class JsonApiSerializerBuilder
     private static function createHandlerRegistryAndAddDefaultHandlers()
     {
         $handlerRegistry = new HandlerRegistry();
-        $handlerRegistry->registerSubscribingHandler(new DateHandler());
+        $handlerRegistry->registerSubscribingHandler(new DateHandler(new BaseDateHandler()));
         $handlerRegistry->registerSubscribingHandler(new StdClassHandler());
-        $handlerRegistry->registerSubscribingHandler(new PhpCollectionHandler());
-        $handlerRegistry->registerSubscribingHandler(new ArrayCollectionHandler());
-        $handlerRegistry->registerSubscribingHandler(new PropelCollectionHandler());
+        $handlerRegistry->registerSubscribingHandler(new ArrayCollectionHandler(new BaseArrayCollectionHandler()));
         $handlerRegistry->registerSubscribingHandler(new ExceptionHandler());
 
         return $handlerRegistry;

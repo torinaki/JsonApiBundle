@@ -48,7 +48,7 @@ class DeserializationTest extends TestCase
             $data,
             Order::class,
             MangoJsonApiBundle::FORMAT,
-            Serializer\DeserializationContext::create()->setSerializeNull(true)
+            Serializer\DeserializationContext::create()
         );
 
         $this->assertSame($order->getId(), $id);
@@ -71,7 +71,7 @@ class DeserializationTest extends TestCase
             $data,
             Order::class,
             MangoJsonApiBundle::FORMAT,
-            Serializer\DeserializationContext::create()->setSerializeNull(true)
+            Serializer\DeserializationContext::create()
         );
 
         $this->assertSame($order->getId(), $id);
@@ -95,7 +95,7 @@ class DeserializationTest extends TestCase
             $data,
             Order::class,
             MangoJsonApiBundle::FORMAT,
-            Serializer\DeserializationContext::create()->setSerializeNull(true)
+            Serializer\DeserializationContext::create()
         );
 
         $this->assertSame($order->getId(), $id);
@@ -128,7 +128,7 @@ class DeserializationTest extends TestCase
             $data,
             Order::class,
             MangoJsonApiBundle::FORMAT,
-            Serializer\DeserializationContext::create()->setSerializeNull(true)
+            Serializer\DeserializationContext::create()
         );
 
         $this->assertSame($order->getId(), $id);
@@ -176,7 +176,7 @@ class DeserializationTest extends TestCase
             $data,
             Order::class,
             MangoJsonApiBundle::FORMAT,
-            Serializer\DeserializationContext::create()->setSerializeNull(true)
+            Serializer\DeserializationContext::create()
         );
 
         $this->assertSame($id, $order->getId());
@@ -222,7 +222,7 @@ class DeserializationTest extends TestCase
             $data,
             Order::class,
             MangoJsonApiBundle::FORMAT,
-            Serializer\DeserializationContext::create()->setSerializeNull(true)
+            Serializer\DeserializationContext::create()
         );
         $this->assertSame($id, $order->getId());
 

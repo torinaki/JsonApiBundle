@@ -8,9 +8,10 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 
+use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
-use JMS\Serializer\JsonSerializationVisitor;
+use JMS\Serializer\Visitor\SerializationVisitorInterface;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -40,12 +41,12 @@ class ExceptionHandler implements SubscribingHandlerInterface
      * Serialize exception
      * @see http://jsonapi.org/format/#error-objects
      *
-     * @param JsonSerializationVisitor $visitor
-     * @param \Exception               $exception
+     * @param SerializationVisitorInterface $visitor
+     * @param \Exception                    $exception
      *
      * @return array
      */
-    public function serializeException(JsonSerializationVisitor $visitor, \Exception $exception)
+    public function serializeException(SerializationVisitorInterface $visitor, \Exception $exception, $type, Context $context)
     {
         $data = [
             // all these values should be a string according to spec
@@ -54,11 +55,6 @@ class ExceptionHandler implements SubscribingHandlerInterface
             'title'  => 'Exception has been thrown',
             'detail' => (string) $exception->getMessage()
         ];
-
-        if (null === $visitor->getRoot()) {
-            $visitor->setRoot($data);
-        }
-
         return $data;
     }
 }

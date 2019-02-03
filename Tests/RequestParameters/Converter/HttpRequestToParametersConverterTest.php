@@ -7,6 +7,9 @@
  */
 namespace Mango\Bundle\JsonApiBundle\Tests\RequestParameters\Converter;
 
+use Mango\Bundle\JsonApiBundle\Tests\Fixtures\JsonApiSerializerBuilder;
+use Mango\Bundle\JsonApiBundle\Tests\Fixtures\RequestTestModel;
+use Metadata\MetadataFactoryInterface;
 use Symfony\Bundle\FrameworkBundle\Tests\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\RecursiveValidator;
@@ -67,9 +70,7 @@ class HttpRequestToParametersConverterTest extends TestCase
      */
     public function setUp()
     {
-        $this->serializer = $this->getMockBuilder(Serializer::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $this->serializer = JsonApiSerializerBuilder::build();
         $this->validator = $this->getMockBuilder(RecursiveValidator::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -290,7 +291,7 @@ class HttpRequestToParametersConverterTest extends TestCase
         $configuration = new ParamConverter(
             [
                 'name'    => 'some_name',
-                'class'   => 'SomeClassName',
+                'class'   => RequestTestModel::class,
                 'options' => $options
             ]
         );
@@ -310,11 +311,6 @@ class HttpRequestToParametersConverterTest extends TestCase
             ->with($fromContent ? [] : $query['page'])
             ->willReturn([]);
 
-        $this->serializer->expects($this->once())
-            ->method('deserialize')
-            ->with($expectedContentToDeserialize, 'SomeClassName', 'json')
-            ->willReturn($model);
-
         $violations = [];
         if ($validate) {
             $violations = new ConstraintViolationList();
@@ -324,7 +320,7 @@ class HttpRequestToParametersConverterTest extends TestCase
 
             $this->validator->expects($this->once())
                 ->method('validate')
-                ->with($this->identicalTo($model))
+                ->with($this->isInstanceOf(RequestTestModel::class))
                 ->willReturn($violations);
         } else {
             $this->validator->expects($this->never())->method('validate');
@@ -333,10 +329,10 @@ class HttpRequestToParametersConverterTest extends TestCase
         $service = $this->createService();
 
         $this->assertTrue($service->apply($request, $configuration));
-        $this->assertSame($model, $request->attributes->get('some_name'));
+        $this->assertInstanceOf(RequestTestModel::class, $request->attributes->get('some_name'));
         if ($validate) {
-            $this->assertSame($isValid, $model->isValid());
-            $this->assertSame($violations, $model->getViolations());
+            $this->assertSame($isValid, $request->attributes->get('some_name')->isValid());
+            $this->assertSame($violations, $request->attributes->get('some_name')->getViolations());
         }
     }
 

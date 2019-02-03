@@ -9,7 +9,7 @@
 namespace Mango\Bundle\JsonApiBundle\Tests\Serializer;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use JMS\Serializer;
+use JMS\Serializer\SerializationContext;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
@@ -54,10 +54,10 @@ class SerializerTest extends TestCase
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
             MangoJsonApiBundle::FORMAT,
-            Serializer\SerializationContext::create()->setSerializeNull(true)
+            SerializationContext::create()->setSerializeNull(true)
         );
 
-        $this->assertSame(json_decode($serialized, 1), [
+        $this->assertEquals(json_decode($serialized, 1), [
             'data' => [
                 'type' => 'order',
                 'id' => '1',
@@ -102,52 +102,55 @@ class SerializerTest extends TestCase
             ->setPhone('+440000000000')
             ->setAdminComments('Test comments that might be longer that ordinary text.')
             ->setAddress($orderAddress)
-            ->setOrderDate(new \DateTime('2018-01-01T00:00:00+0300'));
+            ->setOrderDate(new \DateTime('2018-01-01T00:00:00+03:00'));
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
             MangoJsonApiBundle::FORMAT,
-            Serializer\SerializationContext::create()->setSerializeNull(true)
+            SerializationContext::create()->setSerializeNull(true)
         );
 
-        $this->assertSame(json_decode($serialized, 1), [
-            'data' => [
-                'type' => 'order',
-                'id' => '1',
-                'attributes' => [
-                    'email' => 'test@example.com',
-                    'phone' => '+440000000000',
-                    'admin-comments' => 'Test comments that might be longer that ordinary text.',
-                    'date' => '2018-01-01T00:00:00+0300'
-                ],
-                'relationships' => [
-                    'address' => [
-                        'data' => [
-                            'type' => 'order/address',
-                            'id' => '2',
-                        ],
-                    ],
-                    'payment' => [
-                        'data' => null,
-                    ],
-                    'items' => [
-                        'data' => [],
-                    ],
-                    'gift-coupons' => [
-                        'data' => [],
-                    ]
-                ],
-            ],
-            'included' => [
-                [
-                    'type' => 'order/address',
-                    'id' => '2',
+        $this->assertSame(
+            [
+                'data' => [
+                    'type' => 'order',
+                    'id' => '1',
                     'attributes' => [
-                        'street' => 'Street Address 510',
+                        'email' => 'test@example.com',
+                        'phone' => '+440000000000',
+                        'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                        'date' => '2018-01-01T00:00:00+03:00'
+                    ],
+                    'relationships' => [
+                        'address' => [
+                            'data' => [
+                                'type' => 'order/address',
+                                'id' => '2',
+                            ],
+                        ],
+                        'payment' => [
+                            'data' => null,
+                        ],
+                        'items' => [
+                            'data' => [],
+                        ],
+                        'gift-coupons' => [
+                            'data' => [],
+                        ]
+                    ],
+                ],
+                'included' => [
+                    [
+                        'type' => 'order/address',
+                        'id' => '2',
+                        'attributes' => [
+                            'street' => 'Street Address 510',
+                        ]
                     ]
                 ]
-            ]
-        ]);
+            ],
+            json_decode($serialized, 1)
+        );
     }
 
     /**
@@ -175,13 +178,13 @@ class SerializerTest extends TestCase
             ->setPhone('+440000000000')
             ->setAdminComments('Test comments that might be longer that ordinary text.')
             ->setAddress($orderAddress)
-            ->setOrderDate(new \DateTime('2018-01-01T00:00:00+0300'))
+            ->setOrderDate(new \DateTime('2018-01-01T00:00:00+03:00'))
             ->setItems(new ArrayCollection([$orderItem1, $orderItem2]));
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
             MangoJsonApiBundle::FORMAT,
-            Serializer\SerializationContext::create()->setSerializeNull(true)
+            SerializationContext::create()->setSerializeNull(true)
         );
 
         $this->assertSame(json_decode($serialized, 1), [
@@ -192,7 +195,7 @@ class SerializerTest extends TestCase
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
                     'admin-comments' => 'Test comments that might be longer that ordinary text.',
-                    'date' => '2018-01-01T00:00:00+0300'
+                    'date' => '2018-01-01T00:00:00+03:00'
                 ],
                 'relationships' => [
                     'address' => [
@@ -271,7 +274,7 @@ class SerializerTest extends TestCase
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
             MangoJsonApiBundle::FORMAT,
-            Serializer\SerializationContext::create()->setSerializeNull(true)
+            SerializationContext::create()->setSerializeNull(true)
         );
 
         $this->assertSame(json_decode($serialized, 1), [
@@ -317,7 +320,7 @@ class SerializerTest extends TestCase
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
             MangoJsonApiBundle::FORMAT,
-            Serializer\SerializationContext::create()->setSerializeNull(true)
+            SerializationContext::create()->setSerializeNull(true)
         );
 
         // TODO: here is a bug. When serialized, relationships merge in include property

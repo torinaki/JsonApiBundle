@@ -1,6 +1,5 @@
 parameters:
     json_api.listener.json_event_subscriber.class: Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber
-    jms_serializer.datetime_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler
     jms_serializer.doctrine_object_constructor.class: Mango\Bundle\JsonApiBundle\Serializer\Construction\DoctrineObjectConstructor
     jms_serializer.array_collection_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\ArrayCollectionHandler
     jms_serializer.accessor_strategy.default.class: Mango\Bundle\JsonApiBundle\Serializer\Accessor\DefaultAccessorStrategy
@@ -44,8 +43,6 @@ services:
     jms_serializer.json_api_serialization_visitor:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor'
         arguments:
-            - '@jms_serializer.naming_strategy'
-            - '@jms_serializer.accessor_strategy'
             - '@json_api.metadata_factory'
             - '%json_api.show_version_info%'
         tags:
@@ -107,3 +104,13 @@ services:
 
         tags:
             - {name: 'request.param_converter', converter: 'json_api.request_params.converter.http_request_converter'}
+
+    json_api.datetime_handler:
+        class: Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler
+        decorates: jms_serializer.datetime_handler
+        arguments: jms_serializer.datetime_handler.inner
+
+    json_api.array_collection_handler:
+        class: Mango\Bundle\JsonApiBundle\Serializer\Handler\ArrayCollectionHandler
+        decorates: jms_serializer.array_collection_handler
+        arguments: jms_serializer.array_collection_handler

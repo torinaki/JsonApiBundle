@@ -26,6 +26,7 @@ use JMS\Serializer\Annotation\PreSerialize;
 use JMS\Serializer\Annotation\ReadOnly;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\Since;
+use JMS\Serializer\Annotation\SkipWhenEmpty;
 use JMS\Serializer\Annotation\Type;
 use JMS\Serializer\Annotation\Until;
 use JMS\Serializer\Annotation\VirtualProperty;
@@ -39,11 +40,15 @@ use JMS\Serializer\Annotation\XmlMap;
 use JMS\Serializer\Annotation\XmlNamespace;
 use JMS\Serializer\Annotation\XmlRoot;
 use JMS\Serializer\Annotation\XmlValue;
-use JMS\Serializer\Exception\InvalidArgumentException;
-use JMS\Serializer\GraphNavigator;
+use JMS\Serializer\Exception\InvalidMetadataException;
+use JMS\Serializer\Expression\CompilableExpressionEvaluatorInterface;
+use JMS\Serializer\Metadata\Driver\ExpressionMetadataTrait;
 use JMS\Serializer\Metadata\ExpressionPropertyMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Metadata\VirtualPropertyMetadata;
+use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use JMS\Serializer\Type\Parser;
+use JMS\Serializer\Type\ParserInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
@@ -52,28 +57,36 @@ use Metadata\Driver\DriverInterface;
 use Metadata\MethodMetadata;
 use Metadata\ClassMetadata;
 
-/**
- * @author Steffen Brem <steffenbrem@gmail.com>
- */
 class AnnotationDriver implements DriverInterface
 {
-    /**
-   * @var Reader
-   */
-  private $reader;
+    use ExpressionMetadataTrait;
 
-  /**
-   * @param Reader $reader
-   */
-  public function __construct(Reader $reader)
-  {
-      $this->reader = $reader;
-  }
+    /**
+     * @var Reader
+     */
+    private $reader;
+
+    /** @var ParserInterface */
+    private $typeParser;
+
+    /**  @var PropertyNamingStrategyInterface */
+    private $namingStrategy;
+
+    public function __construct(Reader $reader, PropertyNamingStrategyInterface $namingStrategy, ?ParserInterface $typeParser = null, ?CompilableExpressionEvaluatorInterface $expressionEvaluator = null)
+    {
+        $this->reader = $reader;
+        $this->typeParser = $typeParser ?: new Parser();
+        $this->namingStrategy = $namingStrategy;
+        $this->expressionEvaluator = $expressionEvaluator;
+    }
 
     public function loadMetadataForClass(\ReflectionClass $class): ?ClassMetadata
     {
         $classMetadata = new JsonApiClassMetadata($name = $class->name);
-        $classMetadata->fileResources[] = $class->getFilename();
+        $fileResource =  $class->getFilename();
+        if (false !== $fileResource) {
+            $classMetadata->fileResources[] = $fileResource;
+        }
 
         $propertiesMetadata = array();
         $propertiesAnnotations = array();
@@ -109,7 +122,11 @@ class AnnotationDriver implements DriverInterface
                 $classMetadata->xmlDiscriminatorCData = (bool) $annot->cdata;
                 $classMetadata->xmlDiscriminatorNamespace = $annot->namespace ? (string) $annot->namespace : null;
             } elseif ($annot instanceof VirtualProperty) {
-                $virtualPropertyMetadata = new ExpressionPropertyMetadata($name, $annot->name, $annot->exp);
+                $virtualPropertyMetadata = new ExpressionPropertyMetadata(
+                    $name,
+                    $annot->name,
+                    $this->parseExpression($annot->exp)
+                );
                 $propertiesMetadata[] = $virtualPropertyMetadata;
                 $propertiesAnnotations[] = $annot->options;
             } elseif ($annot instanceof Annotation\Resource) {
@@ -165,7 +182,7 @@ class AnnotationDriver implements DriverInterface
           || $propertyMetadata instanceof ExpressionPropertyMetadata;
                 $propertyMetadata->readOnly = $propertyMetadata->readOnly || $readOnlyClass;
                 $accessType = $classAccessType;
-                $accessor = array(null, null);
+                $accessor = [null, null];
 
                 $propertyAnnotations = $propertiesAnnotations[$propertyKey];
 
@@ -188,19 +205,21 @@ class AnnotationDriver implements DriverInterface
                         $propertyMetadata->untilVersion = $annot->version;
                     } elseif ($annot instanceof SerializedName) {
                         $propertyMetadata->serializedName = $annot->name;
+                    } elseif ($annot instanceof SkipWhenEmpty) {
+                        $propertyMetadata->skipWhenEmpty = true;
                     } elseif ($annot instanceof Expose) {
                         $isExpose = true;
                         if (null !== $annot->if) {
-                            $propertyMetadata->excludeIf = '!('.$annot->if.')';
+                            $propertyMetadata->excludeIf = $this->parseExpression('!(' . $annot->if . ')');
                         }
                     } elseif ($annot instanceof Exclude) {
                         if (null !== $annot->if) {
-                            $propertyMetadata->excludeIf = $annot->if;
+                            $propertyMetadata->excludeIf = $this->parseExpression($annot->if);
                         } else {
                             $isExclude = true;
                         }
                     } elseif ($annot instanceof Type) {
-                        $propertyMetadata->setType($annot->name);
+                        $propertyMetadata->setType($this->typeParser->parse($annot->name));
                     } elseif ($annot instanceof XmlElement) {
                         $propertyMetadata->xmlAttribute = false;
                         $propertyMetadata->xmlElementCData = $annot->cdata;
@@ -232,12 +251,12 @@ class AnnotationDriver implements DriverInterface
                     } elseif ($annot instanceof ReadOnly) {
                         $propertyMetadata->readOnly = $annot->readOnly;
                     } elseif ($annot instanceof Accessor) {
-                        $accessor = array($annot->getter, $annot->setter);
+                        $accessor = [$annot->getter, $annot->setter];
                     } elseif ($annot instanceof Groups) {
                         $propertyMetadata->groups = $annot->groups;
                         foreach ((array) $propertyMetadata->groups as $groupName) {
                             if (false !== strpos($groupName, ',')) {
-                                throw new InvalidArgumentException(sprintf(
+                                throw new InvalidMetadataException(sprintf(
                   'Invalid group name "%s" on "%s", did you mean to create multiple groups?',
                   implode(', ', $propertyMetadata->groups),
                   $propertyMetadata->class.'->'.$propertyMetadata->name
@@ -250,6 +269,25 @@ class AnnotationDriver implements DriverInterface
                         $propertyMetadata->xmlAttributeMap = true;
                     } elseif ($annot instanceof MaxDepth) {
                         $propertyMetadata->maxDepth = $annot->depth;
+                    }
+                }
+
+                if ($propertyMetadata->inline) {
+                    $classMetadata->isList = $classMetadata->isList || PropertyMetadata::isCollectionList($propertyMetadata->type);
+                    $classMetadata->isMap = $classMetadata->isMap || PropertyMetadata::isCollectionMap($propertyMetadata->type);
+
+                    if ($classMetadata->isMap && $classMetadata->isList) {
+                        throw new InvalidMetadataException('Can not have an inline map and and inline map on the same class');
+                    }
+                }
+
+                if (!$propertyMetadata->serializedName) {
+                    $propertyMetadata->serializedName = $this->namingStrategy->translateName($propertyMetadata);
+                }
+
+                foreach ($propertyAnnotations as $annot) {
+                    if ($annot instanceof VirtualProperty && null !== $annot->name) {
+                        $propertyMetadata->name = $annot->name;
                     }
                 }
 
