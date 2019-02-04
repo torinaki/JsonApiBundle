@@ -2,8 +2,17 @@
 
 Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 support coming soon)
 
-## Get Started
-### Installation
+# Table of Contents
+1. [Quick start](#quick-start)
+1. [Configuration](#configuration)
+1. [Request examples](#request-examples)
+    - [Fetch single document](#fetch-single-document)
+    - [Fetch collection](#fetch-collection)
+    - [Create entity](#create-entity)
+4. [API Documentation](#api-documentation)
+
+# Get Started
+## Installation
 
 1. Declare following repository in your `composer.json`:
 ```json
@@ -31,7 +40,7 @@ Register bundles in your `AppKernel`:
     }
 ```
 
-### Configuration
+## Configuration
 
 Configure JMS serializer:
 ```yaml
@@ -53,11 +62,11 @@ mango_json_api:
     catch_exceptions: true
 ```
 
-## Usage
+# Usage
 We assume that you are already familiar with JMS serializer.
 If not please following original JMS serialization V1 documentation: [https://jmsyst.com/libs/serializer/1.x](https://jmsyst.com/libs/serializer/1.x)
 
-### YAML
+## YAML
 It is preferable to use YAML, but you can use annotations as well. The only difference that you should specify type and idField as following:
 YAML example:
 ```yaml
@@ -67,7 +76,7 @@ Your\Entity\User:
         idField: id
 ```
 
-### Annotations
+## Annotations
 Annotation example:
 ```php
 <?php
@@ -93,7 +102,7 @@ class User
 }
 ```
 
-### Serialization and API response
+## Serialization and API response
 ```php
 <?php
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResponse;
@@ -108,14 +117,19 @@ class UserController extends Controller
 }
 ```
 
+## Pagination
+TBD
+
 ## Request parameters validation and converting
 TBD
 
 ## Routing
 Not yet implemented. Coming soon
 
+# Open API (Swagger) documenation generation
+TBD
 
-## [DEPRECATED] documentation
+# [DEPRECATED] documentation
 ...but still might useful in some cases
 
 ### @Resource
