@@ -3,13 +3,19 @@
 Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 support coming soon)
 
 # Table of Contents
-1. [Quick start](#quick-start)
-1. [Configuration](#configuration)
-1. [Request examples](#request-examples)
-    - [Fetch single document](#fetch-single-document)
-    - [Fetch collection](#fetch-collection)
-    - [Create entity](#create-entity)
-4. [API Documentation](#api-documentation)
+1. [Get Started](#get-started)
+    - [Installation](#installation)
+    - [Configuration](#configuration)
+1. [Usage](#usage)
+    - [Serialization configuration](#serialization-configuration)
+        - [YAML](#yaml)
+        - [Annotations](#annotations)
+    - [Serialization and API response](#serialization-and-api-response)
+    - [Pagination](#pagination)
+    - [Request parameters validation and converting](#request-parameters-validation-and-converting)
+    - [Routing](#routing)
+4. [Open API (Swagger) documentation generation](#open-api-swagger-documentation-generation)
+1. [DEPRECATED documentation](#deprecated-documentation)
 
 # Get Started
 ## Installation
@@ -66,7 +72,8 @@ mango_json_api:
 We assume that you are already familiar with JMS serializer.
 If not please following original JMS serialization V1 documentation: [https://jmsyst.com/libs/serializer/1.x](https://jmsyst.com/libs/serializer/1.x)
 
-## YAML
+## Serialization configuration
+### YAML
 It is preferable to use YAML, but you can use annotations as well. The only difference that you should specify type and idField as following:
 YAML example:
 ```yaml
@@ -76,7 +83,7 @@ Your\Entity\User:
         idField: id
 ```
 
-## Annotations
+### Annotations
 Annotation example:
 ```php
 <?php
@@ -129,9 +136,10 @@ Not yet implemented. Coming soon
 # Open API (Swagger) documenation generation
 TBD
 
-# [DEPRECATED] documentation
+# DEPRECATED documentation
 ...but still might useful in some cases
 
+## Annotations
 ### @Resource
 This will define your class as a JSON-API resource, and you can optionally set it's type name.
 > This annotation can be defined on a class.
