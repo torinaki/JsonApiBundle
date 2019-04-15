@@ -11,10 +11,10 @@ Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 suppor
         - [YAML](#yaml)
         - [Annotations](#annotations)
     - [Serialization and API response](#serialization-and-api-response)
-    - [Pagination](#pagination)
     - [Request parameters validation and converting](#request-parameters-validation-and-converting)
+    - [Pagination with Pagerfanta](#pagination-with-pagerfanta)
     - [Routing](#routing)
-4. [Open API (Swagger) documentation generation](#open-api-swagger-documentation-generation)
+4. [Open API (Swagger) documentation](#open-api-Swagger-documentation)
 1. [DEPRECATED documentation](#deprecated-documentation)
 
 # Get Started
@@ -124,16 +124,114 @@ class UserController extends Controller
 }
 ```
 
-## Pagination
-TBD
-
 ## Request parameters validation and converting
-TBD
+
+Create class validation 
+```php
+<?php
+
+namespace App\Parameters;
+
+use Mango\Bundle\JsonApiBundle\RequestParameters\GetParametersAbstract;
+use Mango\Bundle\JsonApiBundle\RequestParameters\Model\Filtering\FilterParamInterface;
+
+class BrandGetParameters extends GetParametersAbstract
+{
+    public function getAvailableFilterFields(): array
+    {
+        return [
+            'brandId',
+            'code',
+            'name',
+            'WebContentBy',
+            'isAuto',
+            'autoPricing',
+        ];
+    }
+
+    public function getAvailableSortingFields(): array
+    {
+        return [
+            'brandId',
+            'code',
+            'name',
+            'canSellOnEbay',
+            'canSellOnAmazonOpticsPlanet',
+            'canSellOnAmazonCampSaver',
+            'canSellOnGunbroker',
+            'WebContentBy.login'
+        ];
+    }
+
+    public static function getFilterFieldOperators(): array
+    {
+        return [
+            'code' => FilterParamInterface::OPERATOR_CONTAINS,
+            'name' => FilterParamInterface::OPERATOR_CONTAINS,
+        ];
+    }
+}
+```
+
+Add following document block for controller method:
+```php
+    /**
+     * @Sensio\ParamConverter(
+     *     "parameters",
+     *     class="App\Parameters\BrandGetParameters",
+     *     converter = "json_api.request_params.converter.http_request_converter",
+     *     options={"query", "validate"}
+     * )
+     */
+```
+
+## Pagination with Pagerfanta
+```php
+<?php
+
+namespace App\Controller;
+
+use App\Parameters\BrandGetParameters;
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+
+class BrandController extends Controller
+{
+    /**
+     * @Sensio\ParamConverter(
+     *     "parameters",
+     *     class="App\Parameters\BrandGetParameters",
+     *     converter = "json_api.request_params.converter.http_request_converter",
+     *     options={"query", "validate"}
+     * )
+     */
+    public function getBrandsAction(BrandGetParameters $parameters)
+    {
+        if (!$parameters->isValid()) {
+            return new JsonApiResponse(
+                $this->serialize($parameters->getViolations()),
+                JsonApiResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        $brandsPager = new Pagerfanta(
+            new DoctrineORMAdapter(
+                $this->get('sabio_app.brand')->getListQuery($parameters)
+            )
+        );
+        $brandsPager->setMaxPerPage($parameters->getPage()->getSize());
+        $brandsPager->setCurrentPage($parameters->getPage()->getNumber());
+
+        return new JsonApiResponse($this->serialize($brandsPager));
+    }
+}
+```
 
 ## Routing
 Not yet implemented. Coming soon
 
-# Open API (Swagger) documenation generation
+# Open API (Swagger) documentation
 TBD
 
 # DEPRECATED documentation
