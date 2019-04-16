@@ -18,12 +18,12 @@ use Mango\Bundle\JsonApiBundle\Configuration\Resource;
 interface ClassMetadataInterface
 {
     /**
-     * @return Resource
+     * @return resource
      */
     public function getResource();
 
     /**
-     * @param Resource $resource
+     * @param resource $resource
      */
     public function setResource(Resource $resource);
 

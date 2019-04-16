@@ -1,22 +1,241 @@
 # JsonApiBundle
 
-[![Join the chat at https://gitter.im/steffenbrem/JsonApiBundle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/steffenbrem/JsonApiBundle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 support coming soon)
 
-Integration of JSON API with Symfony 2 (FOSRestBundle)
+# Table of Contents
+1. [Get Started](#get-started)
+    - [Installation](#installation)
+    - [Configuration](#configuration)
+1. [Usage](#usage)
+    - [Serialization configuration](#serialization-configuration)
+        - [YAML](#yaml)
+        - [Annotations](#annotations)
+    - [Serialization and API response](#serialization-and-api-response)
+    - [Request parameters validation and converting](#request-parameters-validation-and-converting)
+    - [Pagination with Pagerfanta](#pagination-with-pagerfanta)
+    - [Routing](#routing)
+4. [Open API (Swagger) documentation](#open-api-Swagger-documentation)
+1. [DEPRECATED documentation](#deprecated-documentation)
 
-> Note that this is stil a WIP and should not be used for production!
+# Get Started
+## Installation
 
-## Usage
-> Coming soon
-
-If you want to experiment with this implementation, you can just enable this bundle in your `AppKernel` and everything should work directly. Try to serialize some annotated php classes and check it out!
-
-### Configuration reference
-```yml
-mango_json_api:
-    show_version_info: true # default
-    base_uri: /api # default
+1. Declare following repository in your `composer.json`:
+```json
+{
+  "repositories": [
+    { "type": "vcs", "url": "https://github.com/ecentria/JsonApiBundle.git" }
+  ]
+}
 ```
+Install required package:
+```bash
+composer require steffenbrem/json-api-bundle:dev-production
+```
+
+Register bundles in your `AppKernel`:
+```php
+    public function registerBundles()
+    {
+        $bundles = [
+            new JMS\SerializerBundle\JMSSerializerBundle(),
+            new Mango\Bundle\JsonApiBundle\MangoJsonApiBundle(),
+        ];
+
+        return $bundles;
+    }
+```
+
+## Configuration
+
+Configure JMS serializer:
+```yaml
+jms_serializer:
+    property_naming:
+        separator: '_'
+    metadata:
+        auto_detection: true
+        directories:
+            sabio-entity:
+                namespace_prefix: "Your\\Entity"                     # <------ Replace with yours entities namespace
+                path: "@YourAppBundle/Resources/config/serializer/entity"   # <------ Replace with path where you will put serialization configs
+```
+
+Configure JsonApiBundle:
+```yaml
+mango_json_api:
+    base_uri: ~
+    catch_exceptions: true
+```
+
+# Usage
+We assume that you are already familiar with JMS serializer.
+If not please following original JMS serialization V1 documentation: [https://jmsyst.com/libs/serializer/1.x](https://jmsyst.com/libs/serializer/1.x)
+
+## Serialization configuration
+### YAML
+It is preferable to use YAML, but you can use annotations as well. The only difference that you should specify type and idField as following:
+YAML example:
+```yaml
+Your\Entity\User:
+    resource:
+        type: users
+        idField: id
+```
+
+### Annotations
+Annotation example:
+```php
+<?php
+/**
+ * User model
+ *
+ * @JsonApi\Resource(
+ *     type="users",
+ *     showLinkSelf=true,
+ *     absolute=true
+ * )
+ */
+class User
+{
+    /**
+     * Brand ID
+     *
+     * @var integer
+     * @JsonApi\Id()
+     * @Jms\Type("integer")
+     */
+    private $id;
+}
+```
+
+## Serialization and API response
+```php
+<?php
+use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResponse;
+
+class UserController extends Controller
+{
+    public function getUsersAction()
+    {
+        $serializer = $this->get('jms_serializer');
+        return new JsonApiResponse($serializer->serialize($users));
+    }
+}
+```
+
+## Request parameters validation and converting
+
+Create class validation 
+```php
+<?php
+
+namespace App\Parameters;
+
+use Mango\Bundle\JsonApiBundle\RequestParameters\GetParametersAbstract;
+use Mango\Bundle\JsonApiBundle\RequestParameters\Model\Filtering\FilterParamInterface;
+
+class BrandGetParameters extends GetParametersAbstract
+{
+    public function getAvailableFilterFields(): array
+    {
+        return [
+            'brandId',
+            'code',
+            'name',
+            'WebContentBy',
+            'isAuto',
+            'autoPricing',
+        ];
+    }
+
+    public function getAvailableSortingFields(): array
+    {
+        return [
+            'brandId',
+            'code',
+            'name',
+            'canSellOnEbay',
+            'canSellOnAmazonOpticsPlanet',
+            'canSellOnAmazonCampSaver',
+            'canSellOnGunbroker',
+            'WebContentBy.login'
+        ];
+    }
+
+    public static function getFilterFieldOperators(): array
+    {
+        return [
+            'code' => FilterParamInterface::OPERATOR_CONTAINS,
+            'name' => FilterParamInterface::OPERATOR_CONTAINS,
+        ];
+    }
+}
+```
+
+Add following document block for controller method:
+```php
+    /**
+     * @Sensio\ParamConverter(
+     *     "parameters",
+     *     class="App\Parameters\BrandGetParameters",
+     *     converter = "json_api.request_params.converter.http_request_converter",
+     *     options={"query", "validate"}
+     * )
+     */
+```
+
+## Pagination with Pagerfanta
+```php
+<?php
+
+namespace App\Controller;
+
+use App\Parameters\BrandGetParameters;
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+
+class BrandController extends Controller
+{
+    /**
+     * @Sensio\ParamConverter(
+     *     "parameters",
+     *     class="App\Parameters\BrandGetParameters",
+     *     converter = "json_api.request_params.converter.http_request_converter",
+     *     options={"query", "validate"}
+     * )
+     */
+    public function getBrandsAction(BrandGetParameters $parameters)
+    {
+        if (!$parameters->isValid()) {
+            return new JsonApiResponse(
+                $this->serialize($parameters->getViolations()),
+                JsonApiResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        $brandsPager = new Pagerfanta(
+            new DoctrineORMAdapter(
+                $this->get('sabio_app.brand')->getListQuery($parameters)
+            )
+        );
+        $brandsPager->setMaxPerPage($parameters->getPage()->getSize());
+        $brandsPager->setCurrentPage($parameters->getPage()->getNumber());
+
+        return new JsonApiResponse($this->serialize($brandsPager));
+    }
+}
+```
+
+## Routing
+Not yet implemented. Coming soon
+
+# Open API (Swagger) documentation
+TBD
+
+# DEPRECATED documentation
+...but still might useful in some cases
 
 ## Annotations
 ### @Resource
@@ -27,7 +246,7 @@ This will define your class as a JSON-API resource, and you can optionally set i
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /**
- * @JsonApi\Resource(type="posts", showLinkSelf=true)
+ * @JsonApi\Resource(type="posts", showLinkSelf=true, absolute=false)
  */
  class Post 
  {
@@ -38,6 +257,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | ---           | ---     | ---       | ---       | ---   |
 | type          | ~       | No        | string    | If left default, it will resolve its type dynamically based on the short class name. |
 | showLinkSelf  | true    | No        | boolean   | Add `self` link to the resource |
+| absolute      | false   | No        | boolean   | Enables absolute urls creation |
 
 ### @Id (optional, it defaults to `id`)
 This will define the property that will be used as the `id` of a resource. It needs to be unique for every resource of the same type.
@@ -73,7 +293,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     // ..
     
     /**
-     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false, absolute=false)
      */
     protected $comments;
  }
@@ -84,6 +304,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | showData              | false   | No        | boolean   | Shows `data`, which consists of ids of the relationship data |
 | showLinkSelf          | false   | No        | boolean   | Add `self` link of the relationship |
 | showLinkRelated       | false   | No        | boolean   | Add `related` link of the relationship |
+| absolute              | false   | No        | boolean   | Enables absolute urls creation |
 
 ## Configuration Reference
 ```yaml
@@ -91,6 +312,17 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 mango_json_api:
     show_version_info: true
+```
+
+## Serialization JSON VS JSON:API
+```php
+$serializer = $container->get('jms_serializer');
+
+$serializer->serialize($object, 'json'); // raw json
+$serializer->serialize($object, 'json:api'); // json:api
+
+$serializer->deserialize($string, \Some\Type:class, 'json'); // from raw json
+$serializer->deserialize($string, \Some\Type:class, 'json:api'); // from json:api
 ```
 
 ## Example response

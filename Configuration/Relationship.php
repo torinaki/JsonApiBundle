@@ -34,6 +34,13 @@ class Relationship
     protected $showLinkSelf = false;
 
     /**
+     * Absolute urls
+     *
+     * @var bool
+     */
+    protected $absolute = false;
+
+    /**
      * @var bool
      */
     protected $showLinkRelated = false;
@@ -44,13 +51,15 @@ class Relationship
      * @param bool|false $showData
      * @param bool|false $showLinkSelf
      * @param bool|false $showLinkRelated
+     * @param bool|false $absolute
      */
     public function __construct(
         $name,
         $includedByDefault = null,
         $showData = null,
         $showLinkSelf = null,
-        $showLinkRelated = null
+        $showLinkRelated = null,
+        $absolute = null
     ) {
         $this->name = $name;
 
@@ -69,6 +78,10 @@ class Relationship
         if (null !== $showLinkRelated) {
             $this->showLinkRelated = $showLinkRelated;
         }
+
+        if (null !== $absolute) {
+            $this->absolute = $absolute;
+        }
     }
 
     /**
@@ -80,7 +93,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isIncludedByDefault()
     {
@@ -96,7 +109,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowData()
     {
@@ -104,7 +117,7 @@ class Relationship
     }
 
     /**
-     * @param boolean $showData
+     * @param bool $showData
      */
     public function setShowData($showData)
     {
@@ -112,7 +125,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowLinkSelf()
     {
@@ -120,10 +133,18 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowLinkRelated()
     {
         return $this->showLinkRelated;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAbsolute()
+    {
+        return $this->absolute;
     }
 }

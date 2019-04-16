@@ -12,6 +12,7 @@ use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
+use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -47,18 +48,23 @@ final class Serializer implements SerializerInterface
             $context = new SerializationContext();
         }
 
-        if ($format === 'json') {
+        if ($format === MangoJsonApiBundle::FORMAT) {
             $context->addExclusionStrategy($this->exclusionStrategy);
+            $context->setSerializeNull(true);
         }
 
         return $this->jmsSerializer->serialize($data, $format, $context);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function deserialize($data, $type, $format, DeserializationContext $context = null)
     {
+        if (null === $context) {
+            $context = new DeserializationContext();
+        }
+
         return $this->jmsSerializer->deserialize($data, $type, $format, $context);
     }
 }

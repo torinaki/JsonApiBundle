@@ -15,13 +15,20 @@
         }
     ],
     "require": {
-        "php": ">=5.3.9",
-        "symfony/framework-bundle": "~2.3|~3.0",
+        "php": ">=7.0",
+        "ext-json": "*",
         "symfony/yaml": "~2.3|~3.0",
         "symfony/property-access": "~2.3|~3.0",
+        "symfony/validator": "~2.3|~3.0",
+        "symfony/expression-language": "~2.3|~3.0",
         "jms/serializer-bundle": "~0.13|~1.0|~2.0",
-        "pagerfanta/pagerfanta": "~1.0",
-        "willdurand/hateoas": ">2.0"
+        "pagerfanta/pagerfanta": "~2.0",
+        "doctrine/common": "^2.4.8",
+        "psr/log": "~1.0",
+        "sensio/framework-extra-bundle": "^5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~5.7"
     },
     "autoload": {
         "psr-0": {
@@ -30,7 +37,7 @@
     },
     "target-dir": "Mango/Bundle/JsonApiBundle",
     "config": {
-        "bin-dir": "bin"
+        "bin-dir": "vendor/bin"
     },
     "extra": {
         "branch-alias": {
