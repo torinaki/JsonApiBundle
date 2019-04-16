@@ -6,15 +6,21 @@ php:
 
 env:
   global:
+    - PHPUNIT_FLAGS="-v"
     - TARGET=test
 
 matrix:
   fast_finish: true
   include:
     - php: 7.2
-      env: SYMFONY_VERSION=3.4.*
+      env: SYMFONY_VERSION='~3.4'
+    - php: 7.2
+      env: SYMFONY_VERSION='~4.0'
+
     - php: 7.3
-      env: SYMFONY_VERSION=3.4.*
+      env: SYMFONY_VERSION='~3.4'
+    - php: 7.3
+      env: SYMFONY_VERSION='~4.0'
 
 sudo: false
 
@@ -22,10 +28,9 @@ cache:
   directories:
     - $HOME/.composer/cache
 
-before_install:
-  - if [ "$SYMFONY_VERSION" != "" ]; then composer require "symfony/symfony:${SYMFONY_VERSION}" --no-update; fi;
-
-install: composer update --prefer-dist --no-interaction $COMPOSER_FLAGS
+install:
+  - if [ "$SYMFONY_VERSION" != "" ]; then composer require --dev --no-update symfony/symfony=$SYMFONY_VERSION; fi
+  - composer update ${COMPOSER_FLAGS} --no-interaction
 
 script:
- - make $TARGET
+  - vendor/bin/phpunit ${PHPUNIT_FLAGS}
