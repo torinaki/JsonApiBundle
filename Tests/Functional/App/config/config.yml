@@ -1,0 +1,20 @@
+framework:
+  secret: secret
+
+services:
+  logger: { class: Psr\Log\NullLogger }
+
+jms_serializer:
+  property_naming:
+    separator: '-'
+  metadata:
+    auto_detection: true
+    directories:
+      sabio-entity:
+        namespace_prefix: "Mango\\Bundle\\JsonApiBundle\\Tests\\Fixtures"
+        path: "@MangoJsonApiBundle/Tests/Fixtures/config"
+
+mango_json_api:
+  base_uri: ~
+  catch_exceptions: true
+  show_version_info: false

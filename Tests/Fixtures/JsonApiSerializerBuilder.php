@@ -20,8 +20,6 @@ use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolver;
 use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy;
 use Mango\Bundle\JsonApiBundle\Serializer\Handler\ExceptionHandler;
-use Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor;
-use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Cache\NoopCache;
 use Metadata\Driver\DriverChain;
@@ -42,7 +40,8 @@ use JMS\Serializer\Visitor\Factory\JsonDeserializationVisitorFactory;
  * Json api serializer builder
  *
  * @author Ruslan Zavacky <ruslan.zavacky@gmail.com>
- * @todo this builder duplicates bundle's logic. Testing environment should be integrated with Symfony's KernelTestCase
+ * @deprecated Use \Mango\Bundle\JsonApiBundle\Tests\Functional\WebTestCase instead.
+ *             Might be useful if serializer will be extracted as library
  */
 class JsonApiSerializerBuilder
 {

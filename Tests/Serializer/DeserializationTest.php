@@ -13,24 +13,25 @@ use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
-use Mango\Bundle\JsonApiBundle\Tests\Fixtures\JsonApiSerializerBuilder;
-use Mango\Bundle\JsonApiBundle\Tests\TestCase;
+use Mango\Bundle\JsonApiBundle\Tests\Functional\WebTestCase;
 
 /**
  * Serializer test
  *
- * @property JsonApiSerializer $jsonApiSerializer
- *
  * @author Ruslan Zavacky <ruslan.zavacky@gmail.com>
  */
-class DeserializationTest extends TestCase
+class DeserializationTest extends WebTestCase
 {
+    /** @var JsonApiSerializer */
+    private $jsonApiSerializer;
+
     /**
      * {@inheritdoc}
      */
     protected function setUp()
     {
-        $this->jsonApiSerializer = JsonApiSerializerBuilder::build();
+        $kernel = static::bootKernel(['test_case' => 'AnnotationOnly']);
+        $this->jsonApiSerializer = $kernel->getContainer()->get('jms_serializer');
     }
 
     /**

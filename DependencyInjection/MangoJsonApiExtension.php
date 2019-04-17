@@ -45,19 +45,6 @@ class MangoJsonApiExtension extends Extension implements PrependExtensionInterfa
         $loader->load('configuration.yml');
         $loader->load('services.yml');
 
-        // TODO: Make this configurable
-        $configDir = '%kernel.cache_dir%/json_api';
-
-        $container->getDefinition('json_api.metadata.cache.file_cache')->replaceArgument(0, $configDir);
-
-        $dir = $container->getParameterBag()->resolveValue($configDir);
-
-        if (!file_exists($dir)) {
-            if (!$rs = @mkdir($dir, 0777, true)) {
-                throw new \RuntimeException(sprintf('Could not create cache directory "%s".', $dir));
-            }
-        }
-
         $container->setParameter('json_api.show_version_info', $config['show_version_info']);
         $container->setParameter('json_api.base_uri', $config['base_uri']);
         $container->setParameter('json_api.catch_exceptions', $config['catch_exceptions']);

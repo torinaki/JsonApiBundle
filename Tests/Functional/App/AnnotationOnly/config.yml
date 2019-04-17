@@ -1,0 +1,7 @@
+imports:
+  - { resource: ./../config/config.yml }
+
+services:
+  jms_serializer.metadata_driver:
+    alias: json_api.metadata.annotation_driver
+    public: true

@@ -23,9 +23,11 @@ class JsonApiSerializationVisitorFactory implements SerializationVisitorFactory
     private $showVersionInfo = false;
 
     public function __construct(
-        MetadataFactoryInterface $metadataFactory
+        MetadataFactoryInterface $metadataFactory,
+        bool $showVersionInfo = false
     ) {
         $this->metadataFactory = $metadataFactory;
+        $this->showVersionInfo = $showVersionInfo;
     }
 
     public function getVisitor(): SerializationVisitorInterface

@@ -1,0 +1,4 @@
+Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order:
+  resource:
+    type: orders
+    idField: id

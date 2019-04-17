@@ -9,6 +9,8 @@ services:
         public: false
         arguments:
             - '@annotations.reader'
+            - '@jms_serializer.naming_strategy'
+            - '@jms_serializer.type_parser'
 
     json_api.metadata.yaml_driver:
         class: '%json_api.metadata.yaml_driver.class%'
@@ -16,32 +18,16 @@ services:
             - '@jms_serializer.metadata.file_locator'
 
     json_api.metadata.chain_driver:
-        class: '%jms_serializer.metadata.chain_driver.class%'
+        class: Metadata\Driver\DriverChain
         public: false
         arguments:
             - ['@json_api.metadata.yaml_driver', '@json_api.metadata.annotation_driver']
 
-    json_api.metadata.cache.file_cache:
-        class: '%jms_serializer.metadata.cache.file_cache.class%'
-        public: false
-        arguments:
-            - ~
-
-    json_api.metadata.cache:
-        alias: 'json_api.metadata.cache.file_cache'
-        public: false
-
-    json_api.metadata_factory:
-        class: '%jms_serializer.metadata.metadata_factory.class%'
-        public: false
-        arguments:
-            - '@json_api.metadata.chain_driver'
-            - 'Metadata\ClassHierarchyMetadata'
-            - '%kernel.debug%'
-        calls:
-            - [setCache, ['@?json_api.metadata.cache']]
+    jms_serializer.metadata_driver:
+        alias: json_api.metadata.chain_driver
+        public: true
 
     json_api.serializer.relationship_exclusion_strategy:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy'
         arguments:
-            - '@json_api.metadata_factory'
+            - '@jms_serializer.metadata_factory'

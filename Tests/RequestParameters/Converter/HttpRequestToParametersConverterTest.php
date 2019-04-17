@@ -7,10 +7,8 @@
  */
 namespace Mango\Bundle\JsonApiBundle\Tests\RequestParameters\Converter;
 
-use Mango\Bundle\JsonApiBundle\Tests\Fixtures\JsonApiSerializerBuilder;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\RequestTestModel;
-use Metadata\MetadataFactoryInterface;
-use Symfony\Bundle\FrameworkBundle\Tests\TestCase;
+use Mango\Bundle\JsonApiBundle\Tests\Functional\WebTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\RecursiveValidator;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -28,7 +26,7 @@ use Mango\Bundle\JsonApiBundle\RequestParameters\Parser\PageParamParser;
  *
  * @author  Vlad Yarus <vladislav.yarus@ecentria.com>
  */
-class HttpRequestToParametersConverterTest extends TestCase
+class HttpRequestToParametersConverterTest extends WebTestCase
 {
     /**
      * Serializer
@@ -70,7 +68,8 @@ class HttpRequestToParametersConverterTest extends TestCase
      */
     public function setUp()
     {
-        $this->serializer = JsonApiSerializerBuilder::build();
+        $kernel = static::bootKernel(['test_case' => 'AnnotationOnly']);
+        $this->serializer = $kernel->getContainer()->get('jms_serializer');
         $this->validator = $this->getMockBuilder(RecursiveValidator::class)
             ->disableOriginalConstructor()
             ->getMock();

@@ -4,6 +4,7 @@ Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 suppor
 
 # Table of Contents
 1. [Get Started](#get-started)
+    - [Requirements](#requirements)
     - [Installation](#installation)
     - [Configuration](#configuration)
 1. [Usage](#usage)
@@ -14,10 +15,19 @@ Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 suppor
     - [Request parameters validation and converting](#request-parameters-validation-and-converting)
     - [Pagination with Pagerfanta](#pagination-with-pagerfanta)
     - [Routing](#routing)
-4. [Open API (Swagger) documentation](#open-api-Swagger-documentation)
+4. [Open API (Swagger) documentation](#open-api-swagger-documentation)
 1. [DEPRECATED documentation](#deprecated-documentation)
 
 # Get Started
+
+## Requirements
+
+JsonApiBundle integrates with Symfony >=3.
+
+JsonApiBundle requires [JMS Serializer 2.0](https://github.com/schmittjoh/serializer). 
+Please use version [1.0](https://github.com/ecentria/JsonApiBundle/tree/1.0/) if you are looking for
+[JMS Serializer 1.0](https://github.com/schmittjoh/serializer/tree/1.x) support.
+
 ## Installation
 
 1. Declare following repository in your `composer.json`:

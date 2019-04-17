@@ -17,24 +17,25 @@ use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentCard;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentCash;
-use Mango\Bundle\JsonApiBundle\Tests\Fixtures\JsonApiSerializerBuilder;
-use Mango\Bundle\JsonApiBundle\Tests\TestCase;
+use Mango\Bundle\JsonApiBundle\Tests\Functional\WebTestCase;
 
 /**
  * Serializer test
  *
- * @property JsonApiSerializer $jsonApiSerializer
- *
  * @author Ruslan Zavacky <ruslan.zavacky@gmail.com>
  */
-class SerializerTest extends TestCase
+class SerializerTest extends WebTestCase
 {
+    /** @var JsonApiSerializer */
+    private $jsonApiSerializer;
+
     /**
      * {@inheritdoc}
      */
     protected function setUp()
     {
-        $this->jsonApiSerializer = JsonApiSerializerBuilder::build();
+        $kernel = static::bootKernel(['test_case' => 'AnnotationOnly']);
+        $this->jsonApiSerializer = $kernel->getContainer()->get('jms_serializer');
     }
 
     /**
