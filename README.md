@@ -1,6 +1,12 @@
 # JsonApiBundle
 
-Integration of JSON API with Symfony which supports JMS Serializer V1 (V2 support coming soon)
+Integration of JSON API with Symfony which supports JMS Serializer 2.0. 
+
+Note! Old version of JMS Serializer 1.0 support will end soon. 
+Please use JsonApiBundle version [1.0](https://github.com/ecentria/JsonApiBundle/tree/1.0/) instead.
+
+Code License: 
+[Resources/meta/LICENSE](Resources/meta/LICENSE)
 
 # Table of Contents
 1. [Get Started](#get-started)
