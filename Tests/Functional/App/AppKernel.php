@@ -1,12 +1,11 @@
 <?php
-
 /*
- * This file is part of the FOSElasticaBundle package.
+ * This file is part of the ecentria group, inc. software.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) 2019, ecentria group, Inc
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
  */
 
 namespace Mango\Bundle\JsonApiBundle\Tests\Functional\App;
@@ -16,7 +15,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
- * Taken from https://github.com/FriendsOfSymfony/FOSElasticaBundle/blob/master/tests/Functional/app/AppKernel.php
+ * Taken from https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/SecurityBundle/Tests/Functional/app/AppKernel.php
  *
  * @author Dmitry Balabka <dmitry.balabka@intexsys.lv>
  */
@@ -35,7 +34,7 @@ class AppKernel extends Kernel
         $this->testCase = $testCase;
 
         $fs = new Filesystem();
-        if (!$fs->isAbsolutePath($rootConfig) && !file_exists($rootConfig = __DIR__.'/'.$testCase.'/'.$rootConfig)) {
+        if (!$fs->isAbsolutePath($rootConfig) && !is_file($rootConfig = __DIR__.'/'.$testCase.'/'.$rootConfig)) {
             throw new \InvalidArgumentException(sprintf('The root config "%s" does not exist.', $rootConfig));
         }
         $this->rootConfig = $rootConfig;
@@ -43,16 +42,24 @@ class AppKernel extends Kernel
         parent::__construct($environment, $debug);
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getContainerClass()
+    {
+        return parent::getContainerClass().substr(md5($this->rootConfig), -16);
+    }
+
     public function registerBundles()
     {
-        if (!file_exists($filename = $this->getRootDir().'/'.$this->testCase.'/bundles.php')) {
+        if (!is_file($filename = $this->getProjectDir().'/'.$this->testCase.'/bundles.php')) {
             throw new \RuntimeException(sprintf('The bundles file "%s" does not exist.', $filename));
         }
 
         return include $filename;
     }
 
-    public function getRootDir()
+    public function getProjectDir()
     {
         return __DIR__;
     }
