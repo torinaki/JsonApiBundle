@@ -31,3 +31,13 @@ services:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy'
         arguments:
             - '@jms_serializer.metadata_factory'
+
+    json_api.accessor_strategy.default:
+        class: 'Mango\Bundle\JsonApiBundle\Serializer\Accessor\DefaultAccessorStrategy'
+        decorates: 'jms_serializer.accessor_strategy.default'
+        arguments:
+            - '@json_api.accessor_strategy.default.inner'
+
+    jms_serializer.accessor_strategy:
+        alias: json_api.accessor_strategy.default
+        public: false

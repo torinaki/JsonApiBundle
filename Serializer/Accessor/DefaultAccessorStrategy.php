@@ -7,9 +7,11 @@
  */
 namespace Mango\Bundle\JsonApiBundle\Serializer\Accessor;
 
+use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Accessor\DefaultAccessorStrategy as BaseAccessor;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Metadata\PropertyMetadata;
+use JMS\Serializer\SerializationContext;
 use Mango\Bundle\JsonApiBundle\Util\Model\AffectedPropertiesAwareInterface;
 
 /**
@@ -18,17 +20,38 @@ use Mango\Bundle\JsonApiBundle\Util\Model\AffectedPropertiesAwareInterface;
  *
  * @author Vlad Yarus <vladislav.yarus@intexsys.lv>
  */
-class DefaultAccessorStrategy extends BaseAccessor
+class DefaultAccessorStrategy implements AccessorStrategyInterface
 {
+    /**
+     * @var AccessorStrategyInterface
+     */
+    private $originalAccessorStrategy;
+
+    /**
+     * @param AccessorStrategyInterface $originalAccessorStrategy
+     */
+    public function __construct(AccessorStrategyInterface $originalAccessorStrategy)
+    {
+        $this->originalAccessorStrategy = $originalAccessorStrategy;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function setValue(object $object, $value, PropertyMetadata $metadata, DeserializationContext $context): void
     {
-        parent::setValue($object, $value, $metadata, $context);
+        $this->originalAccessorStrategy->setValue($object, $value, $metadata, $context);
 
         if ($object instanceof AffectedPropertiesAwareInterface) {
             $object->addAffectedProperty($metadata->name);
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getValue(object $object, PropertyMetadata $metadata, SerializationContext $context)
+    {
+        return $this->originalAccessorStrategy->getValue($object, $metadata, $context);
     }
 }
