@@ -6,26 +6,41 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver;
 
-use Metadata\ClassMetadata;
+use JMS\Serializer\Exception\InvalidMetadataException;
+use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
+use Metadata\ClassMetadata as BaseClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
-use Mango\Bundle\JsonApiBundle\Configuration\Resource;
+use Mango\Bundle\JsonApiBundle\Configuration\Resource as ResourceMetadata;
 use Mango\Bundle\JsonApiBundle\Util\StringUtil;
-use Metadata\Driver\AbstractFileDriver;
 use Symfony\Component\Yaml\Yaml;
+use JMS\Serializer\Metadata\Driver\YamlDriver as BaseYamlDriver;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-class YamlDriver extends AbstractFileDriver
+class YamlDriver extends BaseYamlDriver
 {
+    use ConverterTrait;
+
     /**
      * {@inheritdoc}
+     *
+     * @throws InvalidMetadataException
+     * @throws \RuntimeException
      */
-    protected function loadMetadataFromFile(\ReflectionClass $class, string $file): ?ClassMetadata
+    protected function loadMetadataFromFile(\ReflectionClass $class, string $file): ?BaseClassMetadata
     {
+        $file = \realpath($file);
+        $jmsMetadata = parent::loadMetadataFromFile($class, $file);
+        if (!$jmsMetadata instanceof JmsClassMetadata) {
+            throw new \RuntimeException(\sprintf('Expected metadata of class %s.', JmsClassMetadata::class));
+        }
+
         $config = Yaml::parse(file_get_contents($file));
 
         if (!isset($config[$name = $class->getName()])) {
@@ -34,6 +49,7 @@ class YamlDriver extends AbstractFileDriver
 
         $config = $config[$name];
 
+        $classMetadata = null;
         if (isset($config['resource'])) {
             $classMetadata = new JsonApiClassMetadata($name);
             $classMetadata->fileResources[] = $file;
@@ -49,44 +65,30 @@ class YamlDriver extends AbstractFileDriver
                 foreach ($config['relations'] as $name => $relation) {
                     $classMetadata->addRelationship(new Relationship(
                         $name,
-                        (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : null,
-                        (isset($relation['showData'])) ? $relation['showData'] : null,
-                        (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : null,
-                        (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : null
+                        $relation['includeByDefault'] ?? null,
+                        $relation['showData'] ?? null,
+                        $relation['showLinkSelf'] ?? null,
+                        $relation['showLinkRelated'] ?? null,
+                        $relation['absolute'] ?? null
                     ));
                 }
             }
-
-            return $classMetadata;
         }
 
-        return null;
+        return $this->convert($name, $jmsMetadata, $classMetadata);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getExtension(): string
-    {
-        return 'yml';
-    }
-
-    /**
-     * @param array            $config
-     * @param \ReflectionClass $class
-     *
-     * @return Resource
-     */
-    protected function parseResource(array $config, \ReflectionClass $class)
+    protected function parseResource(array $config, \ReflectionClass $class): ResourceMetadata
     {
         if (isset($config['resource'])) {
             $resource = $config['resource'];
-            return new Resource(
+            return new ResourceMetadata(
                 $resource['type'],
-                isset($resource['showLinkSelf']) ? $resource['showLinkSelf'] : null
+                $resource['showLinkSelf'] ?? null,
+                $resource['absolute'] ?? null
             );
         }
 
-        return new Resource(StringUtil::dasherize($class->getShortName()));
+        return new ResourceMetadata(StringUtil::dasherize($class->getShortName()));
     }
 }

@@ -10,12 +10,14 @@ services:
         arguments:
             - '@annotations.reader'
             - '@jms_serializer.naming_strategy'
-            - '@jms_serializer.type_parser'
+            - '@?jms_serializer.type_parser'
 
     json_api.metadata.yaml_driver:
         class: '%json_api.metadata.yaml_driver.class%'
         arguments:
             - '@jms_serializer.metadata.file_locator'
+            - '@jms_serializer.naming_strategy'
+            - '@?jms_serializer.type_parser'
 
     json_api.metadata.chain_driver:
         class: Metadata\Driver\DriverChain

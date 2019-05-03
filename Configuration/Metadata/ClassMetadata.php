@@ -6,6 +6,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -13,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
 use Metadata\MergeableInterface;
+use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -141,12 +144,14 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
      */
     public function serialize()
     {
-        return serialize(array(
-            $this->resource,
-            $this->idField,
-            $this->relationships,
-            parent::serialize(),
-        ));
+        return serialize(
+            array(
+                $this->resource,
+                $this->idField,
+                $this->relationships,
+                parent::serialize(),
+            )
+        );
     }
 
     /**
@@ -154,17 +159,22 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
      */
     public function unserialize($str)
     {
-        list(
+        [
             $this->resource,
             $this->idField,
             $this->relationships,
             $parentStr
-            ) = unserialize($str);
+        ] = unserialize($str);
 
         foreach ($this->relationships as $relationship) {
             $this->relationshipsHash[$relationship->getName()] = $relationship;
         }
 
         parent::unserialize($parentStr);
+    }
+
+    public function populateFromJmsMetadata(JmsClassMetadata $classMetadata)
+    {
+        parent::unserialize($classMetadata->serialize());
     }
 }

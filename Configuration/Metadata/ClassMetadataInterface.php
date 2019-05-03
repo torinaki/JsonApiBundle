@@ -6,6 +6,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata;
 
 use Doctrine\Common\Collections\Collection;
@@ -18,12 +20,12 @@ use Mango\Bundle\JsonApiBundle\Configuration\Resource;
 interface ClassMetadataInterface
 {
     /**
-     * @return resource
+     * @return Resource
      */
     public function getResource();
 
     /**
-     * @param resource $resource
+     * @param Resource $resource
      */
     public function setResource(Resource $resource);
 

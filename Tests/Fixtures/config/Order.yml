@@ -1,4 +1,42 @@
 Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order:
   resource:
-    type: orders
+    type: order
+    showLinkSelf: false
     idField: id
+  relations:
+    address:
+      includeByDefault: true
+      showLinkSelf: false
+      showLinkRelated: false
+    payment:
+      includeByDefault: true
+      showLinkSelf: false
+      showLinkRelated: false
+    items:
+      includeByDefault: true
+      showLinkSelf: false
+      showLinkRelated: false
+    giftCoupons:
+      includeByDefault: true
+      showLinkSelf: false
+      showLinkRelated: false
+  properties:
+    id:
+      type: string
+    email:
+      type: string
+    phone:
+      type: string
+    adminComments:
+      type: string
+    address:
+      type: Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress
+    orderDate:
+      type: DateTime
+      serialized_name: date
+    payment:
+      type: Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentAbstract
+    items:
+      type: array<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>
+    giftCoupons:
+      type: ArrayCollection<Mango\Bundle\JsonApiBundle\Tests\Fixtures\GiftCoupon>
