@@ -38,3 +38,4 @@ install:
 
 script:
   - vendor/bin/phpunit ${PHPUNIT_FLAGS}
+  - vendor/bin/phpstan analyse || true
