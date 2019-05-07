@@ -36,12 +36,19 @@ class YamlDriver extends BaseYamlDriver
     protected function loadMetadataFromFile(\ReflectionClass $class, string $file): ?BaseClassMetadata
     {
         $file = \realpath($file);
+        if (false === $file) {
+            throw new \RuntimeException('Can not get real path of file');
+        }
         $jmsMetadata = parent::loadMetadataFromFile($class, $file);
         if (!$jmsMetadata instanceof JmsClassMetadata) {
             throw new \RuntimeException(\sprintf('Expected metadata of class %s.', JmsClassMetadata::class));
         }
 
-        $config = Yaml::parse(file_get_contents($file));
+        $fileContents = \file_get_contents($file);
+        if (false === $fileContents) {
+            throw new \RuntimeException(\sprintf('Can not get file contents of file "%s"', $fileContents));
+        }
+        $config = Yaml::parse($fileContents);
 
         if (!isset($config[$name = $class->getName()])) {
             throw new \RuntimeException(sprintf('Expected metadata for class %s to be defined in %s.', $name, $file));
@@ -53,6 +60,10 @@ class YamlDriver extends BaseYamlDriver
         if (isset($config['resource'])) {
             $classMetadata = new JsonApiClassMetadata($name);
             $classMetadata->fileResources[] = $file;
+            $fileName = $class->getFileName();
+            if (false === $fileName) {
+                throw new \RuntimeException(\sprintf('Class of file %s is internal and can not be serialized.', $file));
+            }
             $classMetadata->fileResources[] = $class->getFileName();
 
             $classMetadata->setResource($this->parseResource($config, $class));

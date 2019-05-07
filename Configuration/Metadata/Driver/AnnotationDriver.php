@@ -12,6 +12,7 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver;
 
 use Doctrine\Common\Annotations\Reader;
 use JMS\Serializer\Annotation\Exclude;
+use JMS\Serializer\Annotation\ReadOnly;
 use JMS\Serializer\Expression\CompilableExpressionEvaluatorInterface;
 use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
@@ -66,6 +67,8 @@ class AnnotationDriver extends JmsAnnotationDriver
                 );
             } elseif ($annot instanceof Exclude) {
                 $excludeAll = true;
+            } elseif ($annot instanceof ReadOnly) {
+                $readOnlyClass = true;
             }
         }
 
