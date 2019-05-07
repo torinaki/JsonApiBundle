@@ -64,7 +64,7 @@ class YamlDriver extends BaseYamlDriver
             if (false === $fileName) {
                 throw new \RuntimeException(\sprintf('Class of file %s is internal and can not be serialized.', $file));
             }
-            $classMetadata->fileResources[] = $class->getFileName();
+            $classMetadata->fileResources[] = $fileName;
 
             $classMetadata->setResource($this->parseResource($config, $class));
 

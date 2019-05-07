@@ -44,11 +44,11 @@ class PaginatedRepresentation
     protected $total;
 
     /**
-     * @param $items
-     * @param $page
-     * @param $limit
-     * @param $pages
-     * @param $total
+     * @param array $items
+     * @param int   $page
+     * @param int   $limit
+     * @param int   $pages
+     * @param int   $total
      */
     public function __construct($items, $page, $limit, $pages, $total)
     {

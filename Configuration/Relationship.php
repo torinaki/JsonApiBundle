@@ -46,7 +46,7 @@ class Relationship
     protected $showLinkRelated = false;
 
     /**
-     * @param            $name
+     * @param string     $name
      * @param bool|false $includedByDefault
      * @param bool|false $showData
      * @param bool|false $showLinkSelf
@@ -101,7 +101,7 @@ class Relationship
     }
 
     /**
-     * @param $bool
+     * @param bool $bool
      */
     public function setIncludedByDefault($bool)
     {

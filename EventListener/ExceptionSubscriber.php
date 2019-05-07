@@ -11,6 +11,7 @@ namespace Mango\Bundle\JsonApiBundle\EventListener;
 use JMS\Serializer\SerializerInterface;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
@@ -61,7 +62,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
      */
     public function setLogger(LoggerInterface $logger = null)
     {
-        $this->logger = $logger;
+        $this->logger = $logger ?? new NullLogger();
         return $this;
     }
 
