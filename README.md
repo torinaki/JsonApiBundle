@@ -143,9 +143,6 @@ class BrandGetParameters extends GetParametersAbstract
             'brandId',
             'code',
             'name',
-            'WebContentBy',
-            'isAuto',
-            'autoPricing',
         ];
     }
 
@@ -155,11 +152,6 @@ class BrandGetParameters extends GetParametersAbstract
             'brandId',
             'code',
             'name',
-            'canSellOnEbay',
-            'canSellOnAmazonOpticsPlanet',
-            'canSellOnAmazonCampSaver',
-            'canSellOnGunbroker',
-            'WebContentBy.login'
         ];
     }
 
