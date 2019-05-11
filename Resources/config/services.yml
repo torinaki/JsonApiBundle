@@ -17,13 +17,6 @@ services:
         tags:
             - { name: 'jms_serializer.event_subscriber' }
 
-    json_api.serializer:
-        class: 'Mango\Bundle\JsonApiBundle\Serializer\Serializer'
-        decorates: 'jms_serializer.serializer'
-        arguments:
-            - '@json_api.serializer.inner'
-            - '@json_api.serializer.relationship_exclusion_strategy'
-
     json_api.serializer.handler.pagerfanta:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler'
         arguments:

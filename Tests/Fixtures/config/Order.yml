@@ -37,6 +37,6 @@ Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order:
     payment:
       type: Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentAbstract
     items:
-      type: array<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>
+      type: ArrayCollection<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>
     giftCoupons:
       type: ArrayCollection<Mango\Bundle\JsonApiBundle\Tests\Fixtures\GiftCoupon>

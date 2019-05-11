@@ -29,11 +29,6 @@ services:
         alias: json_api.metadata.chain_driver
         public: true
 
-    json_api.serializer.relationship_exclusion_strategy:
-        class: 'Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy'
-        arguments:
-            - '@jms_serializer.metadata_factory'
-
     json_api.accessor_strategy.default:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\Accessor\DefaultAccessorStrategy'
         decorates: 'jms_serializer.accessor_strategy.default'

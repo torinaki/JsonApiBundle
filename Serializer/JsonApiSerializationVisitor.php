@@ -17,6 +17,7 @@ use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Visitor\SerializationVisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
+use Mango\Bundle\JsonApiBundle\Serializer\Exception\InvalidArgumentException;
 use Metadata\MetadataFactoryInterface;
 use PhpOption\None;
 use Symfony\Component\ExpressionLanguage;
@@ -50,6 +51,16 @@ class JsonApiSerializationVisitor implements SerializationVisitorInterface
 
     /** @var \SplStack */
     private $documentMetadataStack;
+
+    /**
+     * @var array
+     */
+    private $meta;
+
+    /**
+     * @var array
+     */
+    private $links;
 
     public function __construct(
         MetadataFactoryInterface $metadataFactory,
@@ -91,8 +102,8 @@ class JsonApiSerializationVisitor implements SerializationVisitorInterface
 
         if ($this->isJsonApiDocument) {
             $meta = null;
-            if (is_array($root) && isset($root['meta']) && is_array($root['meta'])) {
-                $meta = $root['meta'];
+            if (is_array($this->meta)) {
+                $meta = $this->meta;
             }
 
             return $this->buildJsonApiRoot($data, $meta);
@@ -194,12 +205,12 @@ class JsonApiSerializationVisitor implements SerializationVisitorInterface
                 $included = $this->included;
             }
 
-            if (isset($root['meta'])) {
-                $meta = $root['meta'];
+            if (isset($this->meta)) {
+                $meta = $this->meta;
             }
 
-            if (isset($root['links'])) {
-                $links = $root['links'];
+            if (isset($this->links)) {
+                $links = $this->links;
             }
 
             if (isset($root['errors'])) {
@@ -297,25 +308,22 @@ class JsonApiSerializationVisitor implements SerializationVisitorInterface
             $result['id'] = $id;
         }
 
-        $idField = $jsonApiMetadata->getIdField();
-
-        $result['attributes'] = array_filter(
+        $filterKeys = \array_merge(
+            [
+                // Should not be in attributes by specification
+                $jsonApiMetadata->getIdField(),
+                // Reserved by specification
+                'relationships',
+                'links',
+                // Bundle reserved field
+                JsonEventSubscriber::EXTRA_DATA_KEY
+            ],
+            // Should not be in attributes by specification
+            \array_keys($relationships)
+        );
+        $result['attributes'] = \array_diff_key(
             $rs,
-            function ($key) use ($idField) {
-                switch ($key) {
-                    case $idField:
-                    case 'relationships':
-                    case 'links':
-                        return false;
-                }
-
-                if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
-                    return false;
-                }
-
-                return true;
-            },
-            ARRAY_FILTER_USE_KEY
+            \array_combine($filterKeys, $filterKeys)
         );
 
         if (!empty($relationships)) {
@@ -476,5 +484,31 @@ class JsonApiSerializationVisitor implements SerializationVisitorInterface
     public function popDocumentMetadata(): array
     {
         return $this->documentMetadataStack->pop();
+    }
+
+    public function addMetaAttribute(string $key, $value): void
+    {
+        if (\array_key_exists($key, $this->meta ?? [])) {
+            throw new InvalidArgumentException();
+        }
+        $this->meta[$key] = $value;
+    }
+
+    public function addMetaAttributes(array $attributes): void
+    {
+        \array_map([$this, 'addMetaAttribute'], \array_keys($attributes), \array_values($attributes));
+    }
+
+    public function addLink(string $key, $value): void
+    {
+        if (\array_key_exists($key, $this->links ?? [])) {
+            throw new InvalidArgumentException();
+        }
+        $this->links[$key] = $value;
+    }
+
+    public function addLinks(array $links): void
+    {
+        \array_map([$this, 'addLink'], \array_keys($links), \array_values($links));
     }
 }

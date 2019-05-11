@@ -74,7 +74,7 @@ class Order
 
     /**
      * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
-     * @JMS\Type("array<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>")
+     * @JMS\Type("ArrayCollection<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>")
      *
      * @var OrderItem[]
      */

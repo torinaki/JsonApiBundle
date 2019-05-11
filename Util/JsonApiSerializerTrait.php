@@ -84,7 +84,7 @@ trait JsonApiSerializerTrait
     private function getSerializer()
     {
         try {
-            return $this->get('json_api.serializer');
+            return $this->get('jms_serializer');
         } catch (\Exception $exception) {
             throw new \Exception(
                 'Given trait assumes that class implements Psr\Container\ContainerInterface or at ' .

@@ -5,6 +5,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+declare(strict_types=1);
 
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 
@@ -13,6 +14,7 @@ use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use Mango\Bundle\JsonApiBundle\Representation\PaginatedRepresentation;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -65,7 +67,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
         $representation = $this->createPaginatedRepresentation($object);
 
         if (false === $visitor->isJsonApiDocument()) {
-            return $context->accept($representation->getItems());
+            return $context->getNavigator()->accept($representation->getItems());
         }
 
         return $this->transformRoot($representation, $visitor, $context);
@@ -85,28 +87,25 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
         JsonApiSerializationVisitor $visitor,
         Context $context
     ) {
-        // serialize items
-        $data = $context->accept($representation->getItems());
+        $visitor->addMetaAttributes(
+            [
+                'page'  => $representation->getPage(),
+                'limit' => $representation->getLimit(),
+                'pages' => $representation->getPages(),
+                'total' => $representation->getTotal(),
+            ]
+        );
 
-        $root = $visitor->getRoot();
+        $visitor->addLinks(
+            [
+                'first'    => $this->getUriForPage(1, $representation->getLimit()),
+                'last'     => $this->getUriForPage($representation->getPages(), $representation->getLimit()),
+                'next'     => $representation->hasNextPage() ? $this->getUriForPage($representation->getNextPage(), $representation->getLimit()) : null,
+                'previous' => $representation->hasPreviousPage() ? $this->getUriForPage($representation->getPreviousPage(), $representation->getLimit()) : null,
+            ]
+        );
 
-        $root['meta'] = [
-            'page'  => $representation->getPage(),
-            'limit' => $representation->getLimit(),
-            'pages' => $representation->getPages(),
-            'total' => $representation->getTotal(),
-        ];
-
-        $root['links'] = [
-            'first'    => $this->getUriForPage(1, $representation->getLimit()),
-            'last'     => $this->getUriForPage($representation->getPages(), $representation->getLimit()),
-            'next'     => $representation->hasNextPage() ? $this->getUriForPage($representation->getNextPage(), $representation->getLimit()) : null,
-            'previous' => $representation->hasPreviousPage() ? $this->getUriForPage($representation->getPreviousPage(), $representation->getLimit()) : null,
-        ];
-
-        $visitor->setRoot($root);
-
-        return $data;
+        return $context->getNavigator()->accept($representation->getItems());
     }
 
     /**
@@ -119,7 +118,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
      */
     protected function getUriForPage($page, $limit)
     {
-        $request = $this->requestStack->getCurrentRequest();
+        $request = $this->requestStack->getCurrentRequest() ?? new Request();
 
         $request->query->set(
             'page',

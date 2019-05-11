@@ -149,7 +149,7 @@ trait DriverTestTrait
         $property->serializedName = 'items';
         $property->setType(
             [
-                'name' => 'array',
+                'name' => 'ArrayCollection',
                 'params' => [
                     [
                         'name' => OrderItem::class,
