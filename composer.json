@@ -32,11 +32,15 @@
         "phpstan/phpstan": "^0.11"
     },
     "autoload": {
-        "psr-0": {
-            "Mango\\Bundle\\JsonApiBundle": ""
+        "psr-4": {
+            "Mango\\Bundle\\JsonApiBundle\\": ""
         }
     },
-    "target-dir": "Mango/Bundle/JsonApiBundle",
+    "autoload-dev": {
+        "psr-4": {
+            "Mango\\Bundle\\JsonApiBundle\\Tests\\": "Tests/"
+        }
+    },
     "config": {
         "bin-dir": "vendor/bin"
     },
