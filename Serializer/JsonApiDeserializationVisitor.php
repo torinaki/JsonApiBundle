@@ -8,12 +8,14 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
+use function is_string;
 use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\JsonDeserializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
-use JMS\Serializer\Naming\AdvancedNamingStrategyInterface;
+//use JMS\Serializer\Naming\AdvancedNamingStrategyInterface;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
+use function key;
 
 /**
  * JsonApi Deserialization Visitor.
@@ -88,10 +90,26 @@ class JsonApiDeserializationVisitor implements DeserializationVisitorInterface
             }
 
             $relationshipData = [];
-            foreach ($included as $include) {
-                if ($include['type'] === $relationship['type'] && $include['id'] === $relationship['id']) {
-                    $relationshipData = $include;
-                    break;
+            // Relationship might be set to NULL or [] according to specification
+            if ($relationship) {
+                if (is_string(key($relationship))) {
+                    // Relationship is single resource
+                    foreach ($included as $include) {
+                        if ($include['type'] === $relationship['type'] && $include['id'] === $relationship['id']) {
+                            $relationshipData = $include;
+                            break;
+                        }
+                    }
+                } else {
+                    // Relationship is resource collection
+                    foreach ($included as $include) {
+                        foreach ($relationship as $singleRelationship) {
+                            if ($include['type'] === $singleRelationship['type'] && $include['id'] === $singleRelationship['id']) {
+                                $relationshipData[] = $include;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
