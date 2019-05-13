@@ -36,17 +36,9 @@ Please use version [1.0](https://github.com/ecentria/JsonApiBundle/tree/1.0/) if
 
 ## Installation
 
-1. Declare following repository in your `composer.json`:
-```json
-{
-  "repositories": [
-    { "type": "vcs", "url": "https://github.com/ecentria/JsonApiBundle.git" }
-  ]
-}
-```
 Install required package:
 ```bash
-composer require steffenbrem/json-api-bundle:dev-production
+composer require ecentria/json-api-bundle:2.0-dev
 ```
 
 Register bundles in your `AppKernel`:
@@ -86,7 +78,7 @@ mango_json_api:
 
 # Usage
 We assume that you are already familiar with JMS serializer.
-If not please following original JMS serialization V1 documentation: [https://jmsyst.com/libs/serializer/1.x](https://jmsyst.com/libs/serializer/1.x)
+If not please following original JMS serialization documentation: [https://jmsyst.com/libs/serializer](https://jmsyst.com/libs/serializer)
 
 ## Serialization configuration
 ### YAML

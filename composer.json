@@ -1,5 +1,5 @@
 {
-    "name": "steffenbrem/json-api-bundle",
+    "name": "ecentria/json-api-bundle",
     "description": "Integration of JSON API with Symfony2 using JMS Serializer.",
     "keywords": [
         "rest",
