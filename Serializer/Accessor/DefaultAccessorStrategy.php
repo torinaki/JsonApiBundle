@@ -8,7 +8,6 @@
 namespace Mango\Bundle\JsonApiBundle\Serializer\Accessor;
 
 use JMS\Serializer\Accessor\AccessorStrategyInterface;
-use JMS\Serializer\Accessor\DefaultAccessorStrategy as BaseAccessor;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\SerializationContext;

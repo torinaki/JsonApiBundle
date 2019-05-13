@@ -14,7 +14,6 @@ use JMS\Serializer\Exception\InvalidArgumentException;
 use JMS\Serializer\Exception\ObjectConstructionException;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
-use JMS\Serializer\VisitorInterface;
 
 /**
  * DoctrineObjectConstructor constructor is a copy of the original JMS constructor with additional logic to
